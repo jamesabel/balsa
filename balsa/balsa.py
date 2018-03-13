@@ -106,7 +106,7 @@ def init_logger(name, author, log_directory=None, use_app_dirs=False, verbose=Fa
     # create file handler
     if use_app_dirs:
         log_directory = appdirs.user_log_dir(name, author)
-    if log_directory is not None or use_app_dirs:
+    if log_directory is not None:
         if delete_existing_log_files:
             shutil.rmtree(log_directory, ignore_errors=True)
         os.makedirs(log_directory, exist_ok=True)
