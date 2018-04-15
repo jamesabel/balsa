@@ -1,7 +1,7 @@
 
 import os
 import shutil
-from enum import Enum, auto
+from enum import Enum
 import logging
 import logging.handlers
 
