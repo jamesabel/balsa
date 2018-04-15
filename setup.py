@@ -21,6 +21,6 @@ setup(
     download_url=__download_url__,
     keywords=['logging', 'utility'],
     packages=[__title__],
-    install_requires=[],
+    install_requires=['appdirs'],
     classifiers=[]
 )
