@@ -61,7 +61,7 @@ class DialogBoxHandler(logging.NullHandler):
                  }
         tk = tkinter.Tk()
         tk.withdraw()  # don't show the 'main' Tk window
-        boxes[record.levelno](f'{record.name} : {record.levelname}', "{:<40}".format(record.msg))
+        boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg)
 
 
 class Balsa:
