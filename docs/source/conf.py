@@ -1,7 +1,8 @@
 
 import semantic_version
 
-from balsa import __version__
+# from balsa import __version__
+__version__ = '0.0.3'
 
 # -*- coding: utf-8 -*-
 #
