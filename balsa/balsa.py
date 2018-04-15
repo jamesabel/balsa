@@ -29,10 +29,10 @@ def get_logger(name):
 
 
 class HandlerType(Enum):
-    Console = auto()
-    File = auto()
-    DialogBox = auto()
-    Callback = auto()
+    Console = 1
+    File = 2
+    DialogBox = 3
+    Callback = 4
 
 
 class BalsaNullHandler(logging.NullHandler):
