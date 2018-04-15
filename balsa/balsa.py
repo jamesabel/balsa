@@ -1,6 +1,7 @@
 
 import os
 import shutil
+from enum import Enum, auto
 import logging
 import logging.handlers
 
@@ -27,7 +28,14 @@ def get_logger(name):
     return logging.getLogger(name)
 
 
-class ErrorSetHandler(logging.NullHandler):
+class HandlerType(Enum):
+    Console = auto()
+    File = auto()
+    DialogBox = auto()
+    Callback = auto()
+
+
+class BalsaNullHandler(logging.NullHandler):
     """
     Hook in a callback function.  For example, this can be used to set the process return code to an error state.
     """
@@ -107,13 +115,15 @@ class Balsa:
             self.root_log.setLevel(logging.INFO)
 
         if self.gui:
+            # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
+            # since that would likely cause a permissions error.
             dialog_box_handler = DialogBoxHandler()
             if self.verbose:
                 dialog_box_handler.setLevel(logging.WARNING)
             else:
                 dialog_box_handler.setLevel(logging.ERROR)
             self.root_log.addHandler(dialog_box_handler)
-            self.handlers['dialog'] = dialog_box_handler
+            self.handlers[HandlerType.DialogBox] = dialog_box_handler
         else:
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(self.log_formatter)
@@ -122,7 +132,7 @@ class Balsa:
             else:
                 console_handler.setLevel(logging.WARNING)
             self.root_log.addHandler(console_handler)
-            self.handlers['console'] = console_handler
+            self.handlers[HandlerType.DialogBox.Console] = console_handler
 
         # create file handler
         if self.use_app_dirs:
@@ -139,12 +149,12 @@ class Balsa:
             else:
                 file_handler.setLevel(logging.INFO)
             self.root_log.addHandler(file_handler)
-            self.handlers['file'] = file_handler
+            self.handlers[HandlerType.File] = file_handler
             self.root_log.info('log file path : "%s" ("%s")' % (fh_path, os.path.abspath(fh_path)))
 
         # error handler for callback on error or above
         if self.error_callback is not None:
-            error_callback_handler = ErrorSetHandler(self.error_callback)
+            error_callback_handler = BalsaNullHandler(self.error_callback)
             error_callback_handler.setLevel(logging.ERROR)
             self.root_log.addHandler(error_callback_handler)
-            self.handlers['error_callback'] = error_callback_handler
+            self.handlers[HandlerType.Callback] = error_callback_handler

@@ -1,7 +1,7 @@
 
 from setuptools import setup
 
-from balsa import __version__, __title__, __author__, __author_email__, __url__, __download_url__
+from balsa import __version__, __title__, __author__, __author_email__, __url__, __download_url__, __description__
 
 with open('readme.rst', encoding='utf-8') as f:
     long_description = '\n' + f.read()
@@ -9,7 +9,7 @@ with open('readme.rst', encoding='utf-8') as f:
 setup(
     name=__title__,
 
-    description='Comparison utility',
+    description=__description__,
     long_description=long_description,
     long_description_content_type='text/x-rst',
 
@@ -19,7 +19,7 @@ setup(
     license='MIT License',
     url=__url__,
     download_url=__download_url__,
-    keywords=['directory', 'file', 'comparison', 'utility'],
+    keywords=['logging', 'utility'],
     packages=[__title__],
     install_requires=[],
     classifiers=[]
