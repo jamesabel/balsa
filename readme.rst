@@ -10,6 +10,7 @@ Simple Example
 ==============
 
 .. code:: python
+
     from balsa import get_logger, Balsa
 
     application_name = 'example'
