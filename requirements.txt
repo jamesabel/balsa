@@ -3,3 +3,4 @@ appdirs
 # dev only
 sphinx
 semantic_version
+wheel
