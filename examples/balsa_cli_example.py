@@ -1,4 +1,5 @@
 
+import argparse
 
 from balsa import get_logger, Balsa
 
@@ -9,9 +10,13 @@ log = get_logger(name=application_name)
 
 
 def main():
-    balsa = Balsa(application_name, author, use_app_dirs=True, error_callback=balsa_example_error_callback,
-                  delete_existing_log_files=True, verbose=True)
-    balsa.init_logger()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
+    args = parser.parse_args()
+
+    balsa = Balsa(application_name, author, error_callback=balsa_example_error_callback)
+    balsa.init_logger_from_args(args)
 
     something_useful()
 

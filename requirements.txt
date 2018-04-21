@@ -1,4 +1,5 @@
 appdirs
+attrs
 #
 # dev only
 sphinx

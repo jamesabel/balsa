@@ -23,6 +23,6 @@ setup(
     keywords=['logging', 'utility'],
     packages=[__title__],
     package_data={__title__: [readme_file_path]},
-    install_requires=['appdirs'],
+    install_requires=['appdirs', 'attrs'],
     classifiers=[]
 )

@@ -10,5 +10,5 @@ def something_useful():
     log.debug('I hate bugs.')
     log.info('Information please.')
     log.warning('Warning Will Robinson!')
-    log.error('To err is human. To really foul things up requires a computer.')
+    log.error('To error is human. To really foul things up requires a computer.')
     log.critical("I just can't.")

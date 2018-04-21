@@ -7,7 +7,7 @@ log = get_logger(name=application_name)
 
 
 def main():
-    balsa = Balsa(application_name, author, use_app_dirs=True, delete_existing_log_files=True, verbose=True, gui=True)
+    balsa = Balsa(application_name, author, gui=True)
     balsa.init_logger()
 
     something_useful()

@@ -9,6 +9,7 @@ import tkinter
 from tkinter.simpledialog import messagebox
 
 import appdirs
+from attr import attrs, attrib
 
 
 def get_logger(name):
@@ -64,44 +65,38 @@ class DialogBoxHandler(logging.NullHandler):
         boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg)
 
 
-class Balsa:
-    def __init__(self, name, author, log_directory=None, use_app_dirs=False, verbose=False,
-                 delete_existing_log_files=False, error_callback=None, gui=False):
+@attrs
+class Balsa(object):
+    name = attrib()
+    author = attrib()
+    verbose = attrib(default=False)
+    use_app_dirs = attrib(default=True)
+    gui = attrib(default=False)
+    delete_existing_log_files = attrib(default=False)
+    max_bytes = attrib(default=100*1E6)
+    backup_count = attrib(default=3)
+    error_callback = attrib(default=None)
+    log_directory = attrib(default=None)
+    log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
+
+    def init_logger_from_args(self, args):
         """
-        :param name: name of the application being logged
-        :param author: name of the author of the application being logged
-        :param log_directory: directory where the log files will be written.
-        :param use_app_dirs: True to use the appdirs package to determine the log directory
-        :param verbose: sets the log levels to more verbose level
-        :param delete_existing_log_files: True to delete all files in log directory
-        # set max_bytes and backup_count both to 0 for one big file
-        :param error_callback: callback function on error or above
-        :param gui: set to True for GUI messages
+        init logger from (specific) command line args
+        :param args: args object, e.g. from argparse's parse_args()
         """
-        self.name = name
-        self.author = author
-        self.log_directory = log_directory
-        self.use_app_dirs = use_app_dirs
-        self.verbose = verbose
-        self.delete_existing_log_files = delete_existing_log_files
-        self.error_callback = error_callback
-        self.gui = gui
-
-        self.log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s')
-
-        # File log settings.  These can be changed prior to calling init_logger()
-        self.max_bytes = 100*1E6
-        self.backup_count = 3
-
-        self.handlers = {}
-        self.root_log = None
+        if hasattr(args, 'logdir') and args.logdir is not None:
+            self.log_directory = args.logdir
+        if hasattr(args, 'verbose') and args.verbose is True:
+            self.verbose = True
+        if hasattr(args, 'dellog') and args.dellog is True:
+            self.delete_existing_log_files = True
+        self.init_logger()
 
     def init_logger(self):
         """
         Initialize the logger.  Call exactly once.
-        :return: an instance of the logger
         """
-
+        self.handlers = {}
         self.root_log = logging.getLogger()  # we init the root logger so all child loggers inherit this functionality
 
         if self.root_log.hasHandlers():
