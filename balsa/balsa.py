@@ -77,6 +77,7 @@ class Balsa(object):
     backup_count = attrib(default=3)
     error_callback = attrib(default=None)
     log_directory = attrib(default=None)
+    log_path = attrib(default=None)
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
 
     def init_logger_from_args(self, args):
@@ -136,8 +137,8 @@ class Balsa(object):
             if self.delete_existing_log_files:
                 shutil.rmtree(self.log_directory, ignore_errors=True)
             os.makedirs(self.log_directory, exist_ok=True)
-            fh_path = os.path.join(self.log_directory, '%s.log' % self.name)
-            file_handler = logging.handlers.RotatingFileHandler(fh_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
+            self.log_path = os.path.join(self.log_directory, '%s.log' % self.name)
+            file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
             file_handler.setFormatter(self.log_formatter)
             if self.verbose:
                 file_handler.setLevel(logging.DEBUG)
@@ -145,7 +146,7 @@ class Balsa(object):
                 file_handler.setLevel(logging.INFO)
             self.root_log.addHandler(file_handler)
             self.handlers[HandlerType.File] = file_handler
-            self.root_log.info('log file path : "%s" ("%s")' % (fh_path, os.path.abspath(fh_path)))
+            self.root_log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
 
         # error handler for callback on error or above
         if self.error_callback is not None:
