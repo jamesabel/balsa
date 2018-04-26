@@ -5,3 +5,7 @@ attrs
 sphinx
 semantic_version
 wheel
+black
+pytest
+coverage
+pytest-cov
