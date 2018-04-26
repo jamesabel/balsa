@@ -70,7 +70,6 @@ class Balsa(object):
     name = attrib()
     author = attrib()
     verbose = attrib(default=False)
-    use_app_dirs = attrib(default=True)
     gui = attrib(default=False)
     delete_existing_log_files = attrib(default=False)
     max_bytes = attrib(default=100*1E6)
@@ -79,6 +78,8 @@ class Balsa(object):
     log_directory = attrib(default=None)
     log_path = attrib(default=None)
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
+    handlers = attrib(default=None)
+    root_log = attrib(default=None)
 
     def init_logger_from_args(self, args):
         """
@@ -99,10 +100,6 @@ class Balsa(object):
         """
         self.handlers = {}
         self.root_log = logging.getLogger()  # we init the root logger so all child loggers inherit this functionality
-
-        if self.root_log.hasHandlers():
-            self.root_log.error('Logger already initialized.')
-            return self.root_log
 
         # set the root log level
         if self.verbose:
@@ -131,7 +128,7 @@ class Balsa(object):
             self.handlers[HandlerType.DialogBox.Console] = console_handler
 
         # create file handler
-        if self.use_app_dirs:
+        if self.log_directory is None:
             self.log_directory = appdirs.user_log_dir(self.name, self.author)
         if self.log_directory is not None:
             if self.delete_existing_log_files:
