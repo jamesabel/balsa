@@ -1,4 +1,2 @@
 
 - add sentry.io support
-
-- put up on PyPI
