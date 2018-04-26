@@ -107,6 +107,9 @@ class Balsa(object):
         else:
             self.root_log.setLevel(logging.INFO)
 
+        if self.root_log.hasHandlers():
+            self.root_log.info('Logger already initialized.')
+
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
             # since that would likely cause a permissions error.
