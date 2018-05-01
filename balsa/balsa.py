@@ -11,6 +11,11 @@ from tkinter.simpledialog import messagebox
 import appdirs
 from attr import attrs, attrib
 
+# args
+verbose_arg_string = 'verbose'
+log_dir_arg_string = 'logdir'
+delete_existing_arg_string = 'dellog'
+
 
 def get_logger(name):
     """
@@ -86,11 +91,11 @@ class Balsa(object):
         init logger from (specific) command line args
         :param args: args object, e.g. from argparse's parse_args()
         """
-        if hasattr(args, 'logdir') and args.logdir is not None:
+        if hasattr(args, log_dir_arg_string) and args.logdir is not None:
             self.log_directory = args.logdir
-        if hasattr(args, 'verbose') and args.verbose is True:
+        if hasattr(args, verbose_arg_string) and args.verbose is True:
             self.verbose = True
-        if hasattr(args, 'dellog') and args.dellog is True:
+        if hasattr(args, delete_existing_arg_string) and args.dellog is True:
             self.delete_existing_log_files = True
         self.init_logger()
 
