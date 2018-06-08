@@ -1,4 +1,5 @@
-del /Q cmpa.egg-info\*.*
+del /Q balsa.egg-info\*.*
+del /Q build\*.*
 del /Q dist\*.*
 copy /Y LICENSE LICENSE.txt
 copy /Y docs\source\readme.rst readme.rst
