@@ -9,7 +9,7 @@ from raven.handlers.logging import SentryHandler
 
 import tkinter
 from tkinter.simpledialog import messagebox
-from mttkinter import mtTkinter
+from mttkinter import mtTkinter  # merely importing this puts it in use (do not delete even though it seems to not be used)
 
 import appdirs
 from attr import attrs, attrib
@@ -179,15 +179,15 @@ class Balsa(object):
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
+            sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
             if self.sentry_dsn is None:
                 self.sentry_client = raven.Client(
-                    dsn=os.environ['SENTRY_DSN'],
-                    sample_rate=0.0 if self.inhibit_cloud_services else 1.0,
+                    sample_rate=sample_rate,
                 )
             else:
                 self.sentry_client = raven.Client(
                     dsn=self.sentry_dsn,
-                    sample_rate=0.0 if self.inhibit_cloud_services else 1.0,
+                    sample_rate=sample_rate,
                 )
 
             sentry_handler = SentryHandler(self.sentry_client)
