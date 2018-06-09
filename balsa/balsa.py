@@ -177,8 +177,7 @@ class Balsa(object):
             self.handlers[HandlerType.Callback] = error_callback_handler
 
         # setting up Sentry error handling
-        # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided
-        # Set self.test_mode to True to inhibit Sentry messages
+        # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
             if self.sentry_dsn is None:
                 self.sentry_client = raven.Client(
