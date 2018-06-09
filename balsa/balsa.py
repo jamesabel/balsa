@@ -42,6 +42,7 @@ class HandlerType(Enum):
     File = 2
     DialogBox = 3
     Callback = 4
+    Sentry = 5
 
 
 class BalsaNullHandler(logging.NullHandler):
@@ -148,7 +149,7 @@ class Balsa(object):
             else:
                 console_handler.setLevel(logging.WARNING)
             self.root_log.addHandler(console_handler)
-            self.handlers[HandlerType.DialogBox.Console] = console_handler
+            self.handlers[HandlerType.Console] = console_handler
 
         # create file handler
         if self.log_directory is None:
@@ -192,5 +193,5 @@ class Balsa(object):
 
             sentry_handler = SentryHandler(self.sentry_client)
             sentry_handler.setLevel(logging.ERROR)
-
+            self.handlers[HandlerType.Sentry] = sentry_handler
             self.root_log.addHandler(sentry_handler)
