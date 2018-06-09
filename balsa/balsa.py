@@ -95,8 +95,10 @@ class Balsa(object):
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
     inhibit_cloud_services = attrib(default=False)
+
+    # sentry
+    use_sentry = attrib(default=False)
     sentry_client = attrib(default=None)
-    sentry = attrib(default=False)
     sentry_dsn = attrib(default=None)
 
     def init_logger_from_args(self, args):
@@ -176,7 +178,7 @@ class Balsa(object):
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided
         # Set self.test_mode to True to inhibit Sentry messages
-        if self.sentry:
+        if self.use_sentry:
             if self.sentry_dsn is None:
                 self.sentry_client = raven.Client(
                     dsn=os.environ['SENTRY_DSN'],
