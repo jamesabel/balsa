@@ -4,12 +4,18 @@ import shutil
 from enum import Enum
 import logging
 import logging.handlers
+import traceback
 import raven
 from raven.handlers.logging import SentryHandler
 
-import tkinter
-from tkinter.simpledialog import messagebox
-from mttkinter import mtTkinter  # merely importing this puts it in use (do not delete even though it seems to not be used)
+try:
+    # embedded Python does not have tkinter
+    import tkinter
+    from tkinter.simpledialog import messagebox
+    from mttkinter import mtTkinter  # merely importing this puts it in use (do not delete even though it seems to not be used)
+    tkinter_present = True
+except ModuleNotFoundError:
+    tkinter_present = False
 
 import appdirs
 from attr import attrs, attrib
@@ -58,20 +64,36 @@ class BalsaNullHandler(logging.NullHandler):
         self._callback(record)
 
 
+def traceback_string():
+    """
+    Helper function that formats most recent traceback.  Useful when a program has an overall try/except
+    and it wants to output the program trace to the log.
+    :return: formatted traceback string (or None if no traceback available)
+    """
+    tb_string = None
+    exc_type, exc_value, exc_traceback = traceback.sys.exc_info()
+    if exc_type is not None:
+        display_lines_list = [str(exc_value)] + traceback.format_tb(exc_traceback)
+        tb_string = '\n'.join(display_lines_list)
+    return tb_string
+
+
 class DialogBoxHandler(logging.NullHandler):
     """
     For GUI apps, display an error message dialog box.  Uses the built-in tkinter module so we don't have any
     special package dependencies.
     """
     def handle(self, record):
-        boxes = {logging.INFO: messagebox.showinfo,
-                 logging.WARNING: messagebox.showwarning,
-                 logging.ERROR: messagebox.showerror,
-                 logging.CRITICAL: messagebox.showerror  # Tk doesn't go any higher than error
-                 }
-        tk = tkinter.Tk()
-        tk.withdraw()  # don't show the 'main' Tk window
-        boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg)
+        if tkinter_present:
+            boxes = {logging.INFO: messagebox.showinfo,
+                     logging.WARNING: messagebox.showwarning,
+                     logging.ERROR: messagebox.showerror,
+                     logging.CRITICAL: messagebox.showerror  # Tk doesn't go any higher than error
+                     }
+            tk = tkinter.Tk()
+            tk.withdraw()  # don't show the 'main' Tk window
+            boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg)
+
 
 
 @attrs
@@ -119,6 +141,7 @@ class Balsa(object):
         """
         Initialize the logger.  Call exactly once.
         """
+
         self.handlers = {}
         self.root_log = logging.getLogger()  # we init the root logger so all child loggers inherit this functionality
 
