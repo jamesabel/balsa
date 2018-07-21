@@ -10,7 +10,7 @@ def test_balsa_exception():
 
     log = get_logger(application_name)
     try:
-        a = 1.0/0.0
+        a = 1.0/0.0  # generate an exception for testing (not a real error)
     except ZeroDivisionError:
         log.error('test exception')
         log.error(traceback_string())

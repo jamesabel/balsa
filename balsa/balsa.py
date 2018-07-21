@@ -92,8 +92,7 @@ class DialogBoxHandler(logging.NullHandler):
                      }
             tk = tkinter.Tk()
             tk.withdraw()  # don't show the 'main' Tk window
-            boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg)
-
+            boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg, parent=tk)
 
 
 @attrs
@@ -154,6 +153,24 @@ class Balsa(object):
         if self.root_log.hasHandlers():
             self.root_log.info('Logger already initialized.')
 
+        # create file handler
+        if self.log_directory is None:
+            self.log_directory = appdirs.user_log_dir(self.name, self.author)
+        if self.log_directory is not None:
+            if self.delete_existing_log_files:
+                shutil.rmtree(self.log_directory, ignore_errors=True)
+            os.makedirs(self.log_directory, exist_ok=True)
+            self.log_path = os.path.join(self.log_directory, '%s.log' % self.name)
+            file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
+            file_handler.setFormatter(self.log_formatter)
+            if self.verbose:
+                file_handler.setLevel(logging.DEBUG)
+            else:
+                file_handler.setLevel(logging.INFO)
+            self.root_log.addHandler(file_handler)
+            self.handlers[HandlerType.File] = file_handler
+            self.root_log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
+
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
             # since that would likely cause a permissions error.
@@ -173,24 +190,6 @@ class Balsa(object):
                 console_handler.setLevel(logging.WARNING)
             self.root_log.addHandler(console_handler)
             self.handlers[HandlerType.Console] = console_handler
-
-        # create file handler
-        if self.log_directory is None:
-            self.log_directory = appdirs.user_log_dir(self.name, self.author)
-        if self.log_directory is not None:
-            if self.delete_existing_log_files:
-                shutil.rmtree(self.log_directory, ignore_errors=True)
-            os.makedirs(self.log_directory, exist_ok=True)
-            self.log_path = os.path.join(self.log_directory, '%s.log' % self.name)
-            file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
-            file_handler.setFormatter(self.log_formatter)
-            if self.verbose:
-                file_handler.setLevel(logging.DEBUG)
-            else:
-                file_handler.setLevel(logging.INFO)
-            self.root_log.addHandler(file_handler)
-            self.handlers[HandlerType.File] = file_handler
-            self.root_log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
 
         # error handler for callback on error or above
         if self.error_callback is not None:

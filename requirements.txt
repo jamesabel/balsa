@@ -11,3 +11,4 @@ black
 pytest
 coverage
 pytest-cov
+pyqt5
