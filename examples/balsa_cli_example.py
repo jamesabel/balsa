@@ -3,8 +3,8 @@ import argparse
 
 from balsa import get_logger, Balsa
 
-from examples import application_name, author, something_useful
-from examples.error_callback import balsa_example_error_callback
+from example import application_name, author, something_useful
+from example.error_callback import balsa_example_error_callback
 
 log = get_logger(name=application_name)
 
