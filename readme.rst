@@ -36,7 +36,7 @@ This will yield output of this form:
 Links
 =====
 
-.. _Balsa Documentation: https://balsa.readthedocs.io/en/latest/
+`Balsa Documentation <https://balsa.readthedocs.io/en/latest/>`_
 
 
 Where did the name come from?
