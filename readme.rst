@@ -32,9 +32,12 @@ This will yield output of this form:
 
     2018-04-15 11:25:58,507 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
 
+
 Links
 =====
+
 .. _Balsa Documentation: https://balsa.readthedocs.io/en/latest/
+
 
 Where did the name come from?
 =============================
