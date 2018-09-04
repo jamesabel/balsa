@@ -33,12 +33,6 @@ This will yield output of this form:
     2018-04-15 11:25:58,507 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
 
 
-Links
-=====
-
-`Balsa Documentation <https://balsa.readthedocs.io/en/latest/>`_
-
-
 Where did the name come from?
 =============================
 Balsa lumber is very soft and light, with a coarse, open grain.

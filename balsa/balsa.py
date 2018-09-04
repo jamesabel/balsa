@@ -68,7 +68,7 @@ class Balsa(object):
     log_path = attrib(default=None)
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
     handlers = attrib(default=None)
-    _log = attrib(default=None)
+    log = attrib(default=None)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -98,16 +98,16 @@ class Balsa(object):
         """
 
         self.handlers = {}
-        self._log = logging.getLogger(self.name)
+        self.log = logging.getLogger(self.name)
 
         # set the root log level
         if self.verbose:
-            self._log.setLevel(logging.DEBUG)
+            self.log.setLevel(logging.DEBUG)
         else:
-            self._log.setLevel(logging.INFO)
+            self.log.setLevel(logging.INFO)
 
-        if self._log.hasHandlers():
-            self._log.info('Logger already initialized.')
+        if self.log.hasHandlers():
+            self.log.info('Logger already initialized.')
 
         # create file handler
         if self.log_directory is None:
@@ -123,9 +123,9 @@ class Balsa(object):
                 file_handler.setLevel(logging.DEBUG)
             else:
                 file_handler.setLevel(logging.INFO)
-            self._log.addHandler(file_handler)
+            self.log.addHandler(file_handler)
             self.handlers[HandlerType.File] = file_handler
-            self._log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
+            self.log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
 
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
@@ -135,7 +135,7 @@ class Balsa(object):
                 dialog_box_handler.setLevel(logging.WARNING)
             else:
                 dialog_box_handler.setLevel(logging.ERROR)
-            self._log.addHandler(dialog_box_handler)
+            self.log.addHandler(dialog_box_handler)
             self.handlers[HandlerType.DialogBox] = dialog_box_handler
         else:
             console_handler = logging.StreamHandler()
@@ -144,20 +144,20 @@ class Balsa(object):
                 console_handler.setLevel(logging.INFO)
             else:
                 console_handler.setLevel(logging.WARNING)
-            self._log.addHandler(console_handler)
+            self.log.addHandler(console_handler)
             self.handlers[HandlerType.Console] = console_handler
 
         # error handler for callback on error or above
         if self.error_callback is not None:
             error_callback_handler = BalsaNullHandler(self.error_callback)
             error_callback_handler.setLevel(logging.ERROR)
-            self._log.addHandler(error_callback_handler)
+            self.log.addHandler(error_callback_handler)
             self.handlers[HandlerType.Callback] = error_callback_handler
 
         string_list_handler = BalsaStringListHandler(self.max_string_list_entries)
         string_list_handler.setFormatter(self.log_formatter)
         string_list_handler.setLevel(logging.INFO)
-        self._log.addHandler(string_list_handler)
+        self.log.addHandler(string_list_handler)
         self.handlers[HandlerType.StringList] = string_list_handler
 
         # setting up Sentry error handling
@@ -177,7 +177,7 @@ class Balsa(object):
             sentry_handler = SentryHandler(self.sentry_client)
             sentry_handler.setLevel(logging.ERROR)
             self.handlers[HandlerType.Sentry] = sentry_handler
-            self._log.addHandler(sentry_handler)
+            self.log.addHandler(sentry_handler)
 
     def get_string_list(self):
         return self.handlers[HandlerType.StringList].strings
