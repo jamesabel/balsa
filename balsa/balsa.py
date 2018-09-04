@@ -1,21 +1,14 @@
 
 import os
 import shutil
-from enum import Enum
 import logging
 import logging.handlers
 import traceback
 import raven
 from raven.handlers.logging import SentryHandler
 
-try:
-    # embedded Python does not have tkinter
-    import tkinter
-    from tkinter.simpledialog import messagebox
-    from mttkinter import mtTkinter  # merely importing this puts it in use (do not delete even though it seems to not be used)
-    tkinter_present = True
-except ModuleNotFoundError:
-    tkinter_present = False
+from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler
+
 
 import appdirs
 from attr import attrs, attrib
@@ -43,27 +36,6 @@ def get_logger(name):
     return logging.getLogger(name)
 
 
-class HandlerType(Enum):
-    Console = 1
-    File = 2
-    DialogBox = 3
-    Callback = 4
-    Sentry = 5
-
-
-class BalsaNullHandler(logging.NullHandler):
-    """
-    Hook in a callback function.  For example, this can be used to set the process return code to an error state.
-    """
-    def __init__(self, callback):
-        super().__init__()
-        self._callback = callback
-
-    def handle(self, record):
-        # make sure this handler level instance is set to the level we want to deem an error - e.g. logging.ERROR
-        self._callback(record)
-
-
 def traceback_string():
     """
     Helper function that formats most recent traceback.  Useful when a program has an overall try/except
@@ -78,29 +50,12 @@ def traceback_string():
     return tb_string
 
 
-class DialogBoxHandler(logging.NullHandler):
-    """
-    For GUI apps, display an error message dialog box.  Uses the built-in tkinter module so we don't have any
-    special package dependencies.
-    """
-    def handle(self, record):
-        if tkinter_present:
-            boxes = {logging.INFO: messagebox.showinfo,
-                     logging.WARNING: messagebox.showwarning,
-                     logging.ERROR: messagebox.showerror,
-                     logging.CRITICAL: messagebox.showerror  # Tk doesn't go any higher than error
-                     }
-            tk = tkinter.Tk()
-            tk.withdraw()  # don't show the 'main' Tk window
-            boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg, parent=tk)
-
-
 @attrs
 class Balsa(object):
 
     # commonly used options
-    name = attrib()
-    author = attrib()
+    name = attrib(default=None)
+    author = attrib(default=None)
     verbose = attrib(default=False)
     gui = attrib(default=False)
     delete_existing_log_files = attrib(default=False)
@@ -108,11 +63,12 @@ class Balsa(object):
     max_bytes = attrib(default=100*1E6)
     backup_count = attrib(default=3)
     error_callback = attrib(default=None)
+    max_string_list_entries = attrib(default=100)
     log_directory = attrib(default=None)
     log_path = attrib(default=None)
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
     handlers = attrib(default=None)
-    root_log = attrib(default=None)
+    _log = attrib(default=None)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -142,16 +98,16 @@ class Balsa(object):
         """
 
         self.handlers = {}
-        self.root_log = logging.getLogger()  # we init the root logger so all child loggers inherit this functionality
+        self._log = logging.getLogger(self.name)
 
         # set the root log level
         if self.verbose:
-            self.root_log.setLevel(logging.DEBUG)
+            self._log.setLevel(logging.DEBUG)
         else:
-            self.root_log.setLevel(logging.INFO)
+            self._log.setLevel(logging.INFO)
 
-        if self.root_log.hasHandlers():
-            self.root_log.info('Logger already initialized.')
+        if self._log.hasHandlers():
+            self._log.info('Logger already initialized.')
 
         # create file handler
         if self.log_directory is None:
@@ -167,9 +123,9 @@ class Balsa(object):
                 file_handler.setLevel(logging.DEBUG)
             else:
                 file_handler.setLevel(logging.INFO)
-            self.root_log.addHandler(file_handler)
+            self._log.addHandler(file_handler)
             self.handlers[HandlerType.File] = file_handler
-            self.root_log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
+            self._log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
 
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
@@ -179,7 +135,7 @@ class Balsa(object):
                 dialog_box_handler.setLevel(logging.WARNING)
             else:
                 dialog_box_handler.setLevel(logging.ERROR)
-            self.root_log.addHandler(dialog_box_handler)
+            self._log.addHandler(dialog_box_handler)
             self.handlers[HandlerType.DialogBox] = dialog_box_handler
         else:
             console_handler = logging.StreamHandler()
@@ -188,15 +144,21 @@ class Balsa(object):
                 console_handler.setLevel(logging.INFO)
             else:
                 console_handler.setLevel(logging.WARNING)
-            self.root_log.addHandler(console_handler)
+            self._log.addHandler(console_handler)
             self.handlers[HandlerType.Console] = console_handler
 
         # error handler for callback on error or above
         if self.error_callback is not None:
             error_callback_handler = BalsaNullHandler(self.error_callback)
             error_callback_handler.setLevel(logging.ERROR)
-            self.root_log.addHandler(error_callback_handler)
+            self._log.addHandler(error_callback_handler)
             self.handlers[HandlerType.Callback] = error_callback_handler
+
+        string_list_handler = BalsaStringListHandler(self.max_string_list_entries)
+        string_list_handler.setFormatter(self.log_formatter)
+        string_list_handler.setLevel(logging.INFO)
+        self._log.addHandler(string_list_handler)
+        self.handlers[HandlerType.StringList] = string_list_handler
 
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
@@ -215,4 +177,7 @@ class Balsa(object):
             sentry_handler = SentryHandler(self.sentry_client)
             sentry_handler.setLevel(logging.ERROR)
             self.handlers[HandlerType.Sentry] = sentry_handler
-            self.root_log.addHandler(sentry_handler)
+            self._log.addHandler(sentry_handler)
+
+    def get_string_list(self):
+        return self.handlers[HandlerType.StringList].strings
