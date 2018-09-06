@@ -54,7 +54,7 @@ def traceback_string():
 class Balsa(object):
 
     # commonly used options
-    name = attrib(default=None)
+    name = attrib(default=None)  # even if this is root, use the name for the log file name
     author = attrib(default=None)
     verbose = attrib(default=False)
     gui = attrib(default=False)
@@ -69,6 +69,8 @@ class Balsa(object):
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
     handlers = attrib(default=None)
     log = attrib(default=None)
+    is_root = attrib(default=False)
+    propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -98,7 +100,12 @@ class Balsa(object):
         """
 
         self.handlers = {}
-        self.log = logging.getLogger(self.name)
+        if self.is_root:
+            self.log = logging.getLogger()
+        else:
+            self.log = logging.getLogger(self.name)
+        if not self.propagate:
+            self.log.propagate = False
 
         # set the root log level
         if self.verbose:

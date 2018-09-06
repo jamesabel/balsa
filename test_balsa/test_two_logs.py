@@ -3,23 +3,37 @@ from balsa import get_logger, Balsa, __author__
 
 
 def test_two_logs():
-    test_names = ['a', 'b']
+    log_names = ['a', 'b', 'c']
 
     # instantiate the balsa objects
-    balsas = [Balsa(test_name, __author__, verbose=True) for test_name in test_names]
-    [b.init_logger() for b in balsas]
+    # The 'a' log is the root and therefore the catch-all
+    # The 'b' log has no propagation and is therefore only its messages
+    balsas = {'a': Balsa('a', __author__, verbose=True, is_root=True),
+              'b': Balsa('b', __author__, verbose=True, propagate=False)}
 
-    logs = [get_logger(test_name) for test_name in test_names]  # get the loggers
+    [b.init_logger() for k, b in balsas.items()]
+
+    logs = [get_logger(test_name) for test_name in log_names]  # get the loggers
 
     for index, log in enumerate(logs):
         # log something
-        log.info(test_names[index])
+        log.info(log_names[index])
 
-    for index, log in enumerate(logs):
-        # make sure each log has exactly one entry
-        assert(len(balsas[index].get_string_list()) == 1)
-        # check the contents ... at least the message we gave it
-        assert(balsas[index].get_string_list()[0][-1] == test_names[index])
+    # check the contents
+
+    assert(len(balsas['a'].get_string_list()) == 2)  # gets the 'c' log in addition to the 'a' log
+    assert(len(balsas['b'].get_string_list()) == 1)  # just the 'b'
+
+    log_string_min_length = 35  # SWAG to try to ensure the log string includes the time stamp, level, etc.
+
+    assert(balsas['a'].get_string_list()[0][-1] == 'a')
+    assert(len(balsas['a'].get_string_list()[0]) > log_string_min_length)
+
+    assert(balsas['a'].get_string_list()[1][-1] == 'c')
+    assert(len(balsas['a'].get_string_list()[1]) > log_string_min_length)
+
+    assert(balsas['b'].get_string_list()[0][-1] == 'b')
+    assert(len(balsas['b'].get_string_list()[0]) > log_string_min_length)
 
 
 if __name__ == '__main__':
