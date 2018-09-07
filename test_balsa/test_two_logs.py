@@ -3,6 +3,9 @@ from balsa import get_logger, Balsa, __author__
 
 
 def test_two_logs():
+    """
+    test two logs where one is the root (catch-all) and other is separate (no propagation to root)
+    """
     log_names = ['a', 'b', 'c']
 
     # instantiate the balsa objects
