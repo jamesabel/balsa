@@ -73,7 +73,7 @@ class DialogBoxHandler(logging.NullHandler):
             self.count += 1
             if self.count == rate_limit['count']:
                 t = 'Limit Reached'
-                s = f"Message box limit of {rate_limit['count']} in {rate_limit['time']} seconds for {record.levelname} reached"
+                s = "Message box limit of %d in %.1f seconds for %s reached" % (int(rate_limit['count']), float(rate_limit['time']), str(record.levelname))
                 if tkinter_present:
                     tk = tkinter.Tk()
                     tk.withdraw()  # don't show the 'main' Tk window
