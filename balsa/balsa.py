@@ -71,6 +71,8 @@ class Balsa(object):
     log = attrib(default=None)
     is_root = attrib(default=False)
     propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
+    rate_limit_count = attrib(default=2)
+    rate_limit_time = attrib(default=10.0)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -137,7 +139,7 @@ class Balsa(object):
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
             # since that would likely cause a permissions error.
-            dialog_box_handler = DialogBoxHandler()
+            dialog_box_handler = DialogBoxHandler(self.rate_limit_count, self.rate_limit_time)
             if self.verbose:
                 dialog_box_handler.setLevel(logging.WARNING)
             else:

@@ -9,12 +9,13 @@ from test_balsa import enter_press_time
 
 
 def press_enter():
-    time.sleep(enter_press_time)
-    pyautogui.press('enter')
+    for _ in range(0, 3):
+        time.sleep(enter_press_time)
+        pyautogui.press('enter')
 
 
-def test_balsa_gui():
-    application_name = 'test_balsa_gui'
+def test_gui_rate_limit():
+    application_name = 'test_gui_rate_limit'
 
     balsa = Balsa(application_name, __author__, verbose=True, log_directory='temp', gui=True, delete_existing_log_files=True)
     balsa.init_logger()
@@ -23,9 +24,11 @@ def test_balsa_gui():
 
     press_enter_thread = threading.Thread(target=press_enter)
     press_enter_thread.start()
-    log.error('test error message')
+    for count in range(0, 4):
+        log.error(str(count))
+
     press_enter_thread.join()
 
 
 if __name__ == '__main__':
-    test_balsa_gui()
+    test_gui_rate_limit()

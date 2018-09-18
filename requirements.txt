@@ -11,4 +11,5 @@ black
 pytest
 coverage
 pytest-cov
-pyqt5
+PyQt5
+pyautogui

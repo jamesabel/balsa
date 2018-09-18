@@ -52,22 +52,20 @@ def test_threaded_gui():
     balsa.init_logger()
     log.info('starting main thread')
 
-    if True:
-        exception_complete = False
-        gui_thread = QtGuiThread()
-        gui_thread.start()
-        loop_count = 0
-        while gui_thread.isRunning() and loop_count < timeout:
-            time.sleep(1)
-            loop_count += 1
-        assert exception_complete
+    exception_complete = False
+    gui_thread = QtGuiThread()
+    gui_thread.start()
+    loop_count = 0
+    while gui_thread.isRunning() and loop_count < timeout:
+        time.sleep(1)
+        loop_count += 1
+    assert exception_complete
 
-    if True:
-        exception_complete = False
-        gui_thread = GuiThread()
-        gui_thread.start()
-        gui_thread.join(timeout)
-        assert exception_complete
+    exception_complete = False
+    gui_thread = GuiThread()
+    gui_thread.start()
+    gui_thread.join(timeout)
+    assert exception_complete
 
 
 if __name__ == '__main__':
