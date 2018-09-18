@@ -7,7 +7,7 @@ raven
 sphinx
 semantic_version
 wheel
-black
+# black
 pytest
 coverage
 pytest-cov
