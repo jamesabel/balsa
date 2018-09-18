@@ -82,7 +82,8 @@ class Balsa(object):
     sentry_dsn = attrib(default=None)
 
     # a separate rate limit for each level
-    rate_limits = attrib(default={level: {'count': 2, 'time': 60.0} for level in [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]})
+    rate_limits = attrib(default={level: {'count': 2, 'time': 60.0} for level in
+                                  [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.NOTSET]})
 
     def init_logger_from_args(self, args):
         """

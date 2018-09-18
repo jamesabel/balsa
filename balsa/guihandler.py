@@ -43,8 +43,12 @@ class DialogBoxHandler(logging.NullHandler):
 
     def handle(self, record):
         now = time.time()
-        rate_limit = self.rate_limits[record.levelno]
-        if self.start_display_time_window is None or now - self.start_display_time_window > rate_limit['time']:
+        if record.levelno in self.rate_limits:
+            rate_limit = self.rate_limits[record.levelno]
+        else:
+            # no limit for custom levels
+            rate_limit = {'count': 1000, 'time': 0.0}
+        if self.start_display_time_window is None or now - self.start_display_time_window >= rate_limit['time']:
             self.count = 0
             self.start_display_time_window = now
         if self.count < rate_limit['count']:
