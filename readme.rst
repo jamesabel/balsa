@@ -32,6 +32,11 @@ This will yield output of this form:
 
     2018-04-15 11:25:58,507 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
 
+Releases
+========
+- 0.6 : Add rate control to popup windows. Automated GUI testing.
+- 0.5 : Allow more than one logger.
+- 0.3 : Initial release.
 
 Where did the name come from?
 =============================

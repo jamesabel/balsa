@@ -13,3 +13,4 @@ coverage
 pytest-cov
 PyQt5
 pyautogui
+pygments
