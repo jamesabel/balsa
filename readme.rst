@@ -4,9 +4,25 @@
 balsa (logging utility)
 =======================
 
-Simple to use package that sets up Python logging.  With just a few lines of code get well formatted file and
-console or GUI logging.
+Simple to use package that sets up Python logging.  With just a few lines of code get well formatted logging to the
+console, log file, popup windows and exception services.
 
+Installation
+============
+
+.. code-block:: console
+
+    pip install balsa
+
+Major Features
+==============
+- Simple to use.  Add full-featured Python logging in just a few lines of code.
+- Sane default log levels.  Single `verbose` flag.  (All levels can be overridden if desired.)
+- Both console (stdout) and GUI (popup window) support.
+- Log file support.  Uses `appdirs` for log file paths.
+- `Sentry <http://www.sentry.io/>`_ support. Just provide your `Sentry DSN <https://docs.sentry.io/quickstart/#configure-the-dsn>`_.
+- Informative log message formatting (or you can change it if you like).
+- Cross platform (Windows, Linux, MacOS).  Pure Python.
 
 Simple Example
 ==============
@@ -32,6 +48,11 @@ This will yield output of this form:
 
     2018-04-15 11:25:58,507 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
 
+Releases
+========
+- 0.6 : Add rate control to popup windows. Automated GUI testing.
+- 0.5 : Allow more than one logger.
+- 0.3 : Initial release.
 
 Where did the name come from?
 =============================
