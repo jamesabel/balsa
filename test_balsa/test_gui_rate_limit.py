@@ -25,7 +25,7 @@ def test_gui_rate_limit():
     press_enter_thread = threading.Thread(target=press_enter)
     press_enter_thread.start()
     for count in range(0, 4):
-        log.error(str(count))
+        log.warning(str(count))
 
     press_enter_thread.join()
 

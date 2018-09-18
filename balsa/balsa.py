@@ -71,8 +71,6 @@ class Balsa(object):
     log = attrib(default=None)
     is_root = attrib(default=False)
     propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
-    rate_limit_count = attrib(default=2)
-    rate_limit_time = attrib(default=10.0)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -82,6 +80,9 @@ class Balsa(object):
     use_sentry = attrib(default=False)
     sentry_client = attrib(default=None)
     sentry_dsn = attrib(default=None)
+
+    # a separate rate limit for each level
+    rate_limits = attrib(default={level: {'count': 2, 'time': 60.0} for level in [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]})
 
     def init_logger_from_args(self, args):
         """
@@ -139,7 +140,7 @@ class Balsa(object):
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
             # since that would likely cause a permissions error.
-            dialog_box_handler = DialogBoxHandler(self.rate_limit_count, self.rate_limit_time)
+            dialog_box_handler = DialogBoxHandler(self.rate_limits)
             if self.verbose:
                 dialog_box_handler.setLevel(logging.WARNING)
             else:

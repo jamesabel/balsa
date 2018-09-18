@@ -29,13 +29,12 @@ class DialogBoxHandler(logging.NullHandler):
     special package dependencies.
     """
 
-    def __init__(self, rate_limit_count, rate_limit_time):
+    def __init__(self, rate_limits):
         """
         :param rate_limit_count: maximum number of dialog boxes that pop up
         :param rate_limit_time: within this time (in seconds)
         """
-        self.rate_limit_count = rate_limit_count
-        self.rate_limit_time = rate_limit_time
+        self.rate_limits = rate_limits
 
         self.count = None
         self.start_display_time_window = None
@@ -44,10 +43,11 @@ class DialogBoxHandler(logging.NullHandler):
 
     def handle(self, record):
         now = time.time()
-        if self.start_display_time_window is None or now - self.start_display_time_window > self.rate_limit_time:
+        rate_limit = self.rate_limits[record.levelno]
+        if self.start_display_time_window is None or now - self.start_display_time_window > rate_limit['time']:
             self.count = 0
             self.start_display_time_window = now
-        if self.count < self.rate_limit_count:
+        if self.count < rate_limit['count']:
             if tkinter_present:
                 boxes = {
                     logging.INFO: messagebox.showinfo,
@@ -67,9 +67,9 @@ class DialogBoxHandler(logging.NullHandler):
                 }
                 boxes[record.levelno](self, record.levelname, record.msg)
             self.count += 1
-            if self.count == self.rate_limit_count:
+            if self.count == rate_limit['count']:
                 t = 'Limit Reached'
-                s = f'Message box limit of {self.rate_limit_count} in {self.rate_limit_time} seconds reached'
+                s = f"Message box limit of {rate_limit['count']} in {rate_limit['time']} seconds for {record.levelname} reached"
                 if tkinter_present:
                     tk = tkinter.Tk()
                     tk.withdraw()  # don't show the 'main' Tk window

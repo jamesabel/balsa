@@ -1,6 +1,7 @@
 
 import time
 import threading
+import logging
 
 import pyautogui
 
@@ -17,7 +18,8 @@ def press_enter():
 def test_balsa_exception():
     application_name = 'test_balsa_exception'
 
-    balsa = Balsa(application_name, __author__, gui=True, rate_limit_count=3)
+    balsa = Balsa(application_name, __author__, gui=True)
+    balsa.rate_limits[logging.ERROR]['count'] = 4  # we have 3 messages
     balsa.init_logger()
 
     log = get_logger(application_name)
