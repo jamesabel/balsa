@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-from balsa import __version__, __title__, __author__, __author_email__, __url__, __download_url__, __description__
+from balsa.__version__ import __version__, __title__, __author__, __author_email__, __url__, __download_url__, __description__
 
 readme_file_path = os.path.join(__title__, 'readme.rst')
 
