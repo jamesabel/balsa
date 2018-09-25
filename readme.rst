@@ -7,6 +7,8 @@ balsa (logging utility)
 Simple to use package that sets up Python logging.  With just a few lines of code get well formatted logging to the
 console, log file, popup windows and exception services.
 
+Here is a short `Presentation on Balsa <https://www.abel.co/balsa_lightening_talk.pdf>`_.
+
 Installation
 ============
 
