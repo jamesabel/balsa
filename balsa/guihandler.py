@@ -23,6 +23,17 @@ if not tkinter_present:
         pyqt_present = False
 
 
+def init_tkinter():
+    tk = tkinter.Tk()
+    tk.withdraw()  # don't show the 'main' Tk window
+
+    # make sure popup window has focus
+    tk.wm_attributes("-topmost", 1)
+    tk.focus_force()
+
+    return tk
+
+
 class DialogBoxHandler(logging.NullHandler):
     """
     For GUI apps, display an error message dialog box.  Uses the built-in tkinter module so we don't have any
@@ -59,8 +70,7 @@ class DialogBoxHandler(logging.NullHandler):
                     logging.ERROR: messagebox.showerror,
                     logging.CRITICAL: messagebox.showerror  # Tk doesn't go any higher than error
                 }
-                tk = tkinter.Tk()
-                tk.withdraw()  # don't show the 'main' Tk window
+                tk = init_tkinter()
                 boxes[record.levelno]('%s : %s' % (record.name, record.levelname), record.msg, parent=tk)
             elif pyqt_present:
                 boxes = {
@@ -75,9 +85,8 @@ class DialogBoxHandler(logging.NullHandler):
                 t = 'Limit Reached'
                 s = "Message box limit of %d in %.1f seconds for %s reached" % (int(rate_limit['count']), float(rate_limit['time']), str(record.levelname))
                 if tkinter_present:
-                    tk = tkinter.Tk()
-                    tk.withdraw()  # don't show the 'main' Tk window
+                    tk = init_tkinter()
                     messagebox.showinfo(t, s, parent=tk)
                 elif pyqt_present:
                     PyQt5.QMessageBox.info(self, t, s)
-
+            self.start_display_time_window = now  # window is the time when the last window was closed
