@@ -158,13 +158,6 @@ class Balsa(object):
             self.log.addHandler(console_handler)
             self.handlers[HandlerType.Console] = console_handler
 
-        # error handler for callback on error or above
-        if self.error_callback is not None:
-            error_callback_handler = BalsaNullHandler(self.error_callback)
-            error_callback_handler.setLevel(logging.ERROR)
-            self.log.addHandler(error_callback_handler)
-            self.handlers[HandlerType.Callback] = error_callback_handler
-
         string_list_handler = BalsaStringListHandler(self.max_string_list_entries)
         string_list_handler.setFormatter(self.log_formatter)
         string_list_handler.setLevel(logging.INFO)
@@ -189,6 +182,14 @@ class Balsa(object):
             sentry_handler.setLevel(logging.ERROR)
             self.handlers[HandlerType.Sentry] = sentry_handler
             self.log.addHandler(sentry_handler)
+
+        # error handler for callback on error or above
+        # (this is last since the user may do a sys.exit() in the error callback
+        if self.error_callback is not None:
+            error_callback_handler = BalsaNullHandler(self.error_callback)
+            error_callback_handler.setLevel(logging.ERROR)
+            self.log.addHandler(error_callback_handler)
+            self.handlers[HandlerType.Callback] = error_callback_handler
 
     def get_string_list(self):
         return self.handlers[HandlerType.StringList].strings
