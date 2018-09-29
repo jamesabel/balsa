@@ -184,7 +184,7 @@ class Balsa(object):
             self.log.addHandler(sentry_handler)
 
         # error handler for callback on error or above
-        # (this is last since the user may do a sys.exit() in the error callback
+        # (this is last since the user may do a sys.exit() in the error callback)
         if self.error_callback is not None:
             error_callback_handler = BalsaNullHandler(self.error_callback)
             error_callback_handler.setLevel(logging.ERROR)
