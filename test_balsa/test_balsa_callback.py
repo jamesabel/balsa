@@ -11,7 +11,8 @@ def my_callback(log_record):
 def test_balsa_callback():
     application_name = 'test_balsa_callback'
 
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory='temp', error_callback=my_callback)
+    balsa = Balsa(application_name, __author__, verbose=True, log_directory='temp', error_callback=my_callback,
+                  is_root=False)
     balsa.init_logger()
 
     log.error('test error message')

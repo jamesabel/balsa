@@ -18,7 +18,7 @@ def press_enter():
 def test_balsa_exception():
     application_name = 'test_balsa_exception'
 
-    balsa = Balsa(application_name, __author__, gui=True)
+    balsa = Balsa(application_name, __author__, gui=True, is_root=False)
     balsa.rate_limits[logging.ERROR]['count'] = 4  # we have 3 messages
     balsa.init_logger()
 

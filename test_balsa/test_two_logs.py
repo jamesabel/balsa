@@ -11,8 +11,9 @@ def test_two_logs():
     # instantiate the balsa objects
     # The 'a' log is the root and therefore the catch-all
     # The 'b' log has no propagation and is therefore only its messages
-    balsas = {'a': Balsa('a', __author__, verbose=True, is_root=True),
-              'b': Balsa('b', __author__, verbose=True, propagate=False)}
+    balsas = {'a': Balsa('a', __author__, verbose=True
+                         ),
+              'b': Balsa('b', __author__, verbose=True, propagate=False, is_root=False)}
 
     [b.init_logger() for k, b in balsas.items()]
 

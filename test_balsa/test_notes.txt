@@ -1,0 +1,4 @@
+
+Most Balsa tests use is_root=False.  This is so each test is 'separate' from a logging standpoint and they can all be
+run from one pytest run.  In general, for real applications, Balsa will be instantiated with the default which
+is is_root=True.

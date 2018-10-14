@@ -48,7 +48,8 @@ def test_threaded_gui():
 
     application_name = 'main_thread'
     log = get_logger(application_name)
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory='temp', gui=True, delete_existing_log_files=True)
+    balsa = Balsa(application_name, __author__, verbose=True, log_directory='temp', gui=True, is_root=False,
+                  delete_existing_log_files=True)
     balsa.init_logger()
     log.info('starting main thread')
 

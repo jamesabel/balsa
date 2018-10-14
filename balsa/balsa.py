@@ -69,7 +69,7 @@ class Balsa(object):
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
     handlers = attrib(default=None)
     log = attrib(default=None)
-    is_root = attrib(default=False)
+    is_root = attrib(default=True)
     propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
 
     # cloud services

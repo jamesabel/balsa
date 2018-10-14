@@ -8,7 +8,7 @@ def test_not_root():
     """
     test that a non-root log does not pick up the logging to another logger
     """
-    balsa = Balsa('a', __author__, verbose=True)
+    balsa = Balsa('a', __author__, verbose=True, is_root=False)
     balsa.init_logger()
 
     some_other_logger = logging.getLogger('b')
