@@ -1,0 +1,6 @@
+[run]
+omit =
+        *venv/*
+        *test_balsa/*
+
+branch = True
