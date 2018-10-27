@@ -1,6 +1,7 @@
 
 import os
 import shutil
+from glob import glob
 import logging
 import logging.handlers
 import traceback
@@ -66,6 +67,7 @@ class Balsa(object):
     max_string_list_entries = attrib(default=100)
     log_directory = attrib(default=None)
     log_path = attrib(default=None)
+    log_extension = attrib(default='.log')
     log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
     handlers = attrib(default=None)
     log = attrib(default=None)
@@ -125,9 +127,13 @@ class Balsa(object):
             self.log_directory = appdirs.user_log_dir(self.name, self.author)
         if self.log_directory is not None:
             if self.delete_existing_log_files:
-                shutil.rmtree(self.log_directory, ignore_errors=True)
+                for file_path in glob(os.path.join(self.log_directory, '*%s' % self.log_extension)):
+                    try:
+                        os.remove(file_path)
+                    except OSError:
+                        pass
             os.makedirs(self.log_directory, exist_ok=True)
-            self.log_path = os.path.join(self.log_directory, '%s.log' % self.name)
+            self.log_path = os.path.join(self.log_directory, '%s%s' % (self.name, self.log_extension))
             file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
             file_handler.setFormatter(self.log_formatter)
             if self.verbose:
