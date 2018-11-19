@@ -1,4 +1,3 @@
-
 from enum import Enum
 import logging
 
@@ -16,6 +15,7 @@ class BalsaNullHandler(logging.NullHandler):
     """
     Hook in a callback function.  For example, this can be used to set the process return code to an error state.
     """
+
     def __init__(self, callback):
         super().__init__()
         self._callback = callback
@@ -29,6 +29,7 @@ class BalsaStringListHandler(logging.NullHandler):
     """
     keeps a buffer of the most recent log entries
     """
+
     def __init__(self, max_entries):
         super().__init__()
         self.max_entries = max_entries

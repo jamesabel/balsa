@@ -1,6 +1,4 @@
-
 import os
-import shutil
 from glob import glob
 import logging
 import logging.handlers
@@ -8,16 +6,21 @@ import traceback
 import raven
 from raven.handlers.logging import SentryHandler
 
-from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler
+from balsa import (
+    HandlerType,
+    BalsaNullHandler,
+    DialogBoxHandler,
+    BalsaStringListHandler,
+)
 
 
 import appdirs
 from attr import attrs, attrib
 
 # args
-verbose_arg_string = 'verbose'
-log_dir_arg_string = 'logdir'
-delete_existing_arg_string = 'dellog'
+verbose_arg_string = "verbose"
+log_dir_arg_string = "logdir"
+delete_existing_arg_string = "dellog"
 
 
 def get_logger(name):
@@ -29,7 +32,7 @@ def get_logger(name):
     """
 
     # if name is a python file, or a path to a python file, extract the module name
-    if name.endswith('.py'):
+    if name.endswith(".py"):
         name = name[:-3]
         if os.sep in name:
             name = name.split(os.sep)[-1]
@@ -47,7 +50,7 @@ def traceback_string():
     exc_type, exc_value, exc_traceback = traceback.sys.exc_info()
     if exc_type is not None:
         display_lines_list = [str(exc_value)] + traceback.format_tb(exc_traceback)
-        tb_string = '\n'.join(display_lines_list)
+        tb_string = "\n".join(display_lines_list)
     return tb_string
 
 
@@ -55,24 +58,32 @@ def traceback_string():
 class Balsa(object):
 
     # commonly used options
-    name = attrib(default=None)  # even if this is root, use the name for the log file name
+    name = attrib(
+        default=None
+    )  # even if this is root, use the name for the log file name
     author = attrib(default=None)
     verbose = attrib(default=False)
     gui = attrib(default=False)
     delete_existing_log_files = attrib(default=False)
 
-    max_bytes = attrib(default=100*1E6)
+    max_bytes = attrib(default=100 * 1e6)
     backup_count = attrib(default=3)
     error_callback = attrib(default=None)
     max_string_list_entries = attrib(default=100)
     log_directory = attrib(default=None)
     log_path = attrib(default=None)
-    log_extension = attrib(default='.log')
-    log_formatter = attrib(default=logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s'))
+    log_extension = attrib(default=".log")
+    log_formatter = attrib(
+        default=logging.Formatter(
+            "%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s"
+        )
+    )
     handlers = attrib(default=None)
     log = attrib(default=None)
     is_root = attrib(default=True)
-    propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
+    propagate = attrib(
+        default=True
+    )  # set to False for this logger to be independent of parent(s)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -84,8 +95,19 @@ class Balsa(object):
     sentry_dsn = attrib(default=None)
 
     # a separate rate limit for each level
-    rate_limits = attrib(default={level: {'count': 2, 'time': 60.0} for level in
-                                  [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.NOTSET]})
+    rate_limits = attrib(
+        default={
+            level: {"count": 2, "time": 60.0}
+            for level in [
+                logging.CRITICAL,
+                logging.ERROR,
+                logging.WARNING,
+                logging.INFO,
+                logging.DEBUG,
+                logging.NOTSET,
+            ]
+        }
+    )
 
     def init_logger_from_args(self, args):
         """
@@ -120,21 +142,27 @@ class Balsa(object):
             self.log.setLevel(logging.INFO)
 
         if self.log.hasHandlers():
-            self.log.info('Logger already initialized.')
+            self.log.info("Logger already initialized.")
 
         # create file handler
         if self.log_directory is None:
             self.log_directory = appdirs.user_log_dir(self.name, self.author)
         if self.log_directory is not None:
             if self.delete_existing_log_files:
-                for file_path in glob(os.path.join(self.log_directory, '*%s' % self.log_extension)):
+                for file_path in glob(
+                    os.path.join(self.log_directory, "*%s" % self.log_extension)
+                ):
                     try:
                         os.remove(file_path)
                     except OSError:
                         pass
             os.makedirs(self.log_directory, exist_ok=True)
-            self.log_path = os.path.join(self.log_directory, '%s%s' % (self.name, self.log_extension))
-            file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
+            self.log_path = os.path.join(
+                self.log_directory, "%s%s" % (self.name, self.log_extension)
+            )
+            file_handler = logging.handlers.RotatingFileHandler(
+                self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count
+            )
             file_handler.setFormatter(self.log_formatter)
             if self.verbose:
                 file_handler.setLevel(logging.DEBUG)
@@ -142,7 +170,10 @@ class Balsa(object):
                 file_handler.setLevel(logging.INFO)
             self.log.addHandler(file_handler)
             self.handlers[HandlerType.File] = file_handler
-            self.log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
+            self.log.info(
+                'log file path : "%s" ("%s")'
+                % (self.log_path, os.path.abspath(self.log_path))
+            )
 
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
@@ -175,13 +206,10 @@ class Balsa(object):
         if self.use_sentry:
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
             if self.sentry_dsn is None:
-                self.sentry_client = raven.Client(
-                    sample_rate=sample_rate,
-                )
+                self.sentry_client = raven.Client(sample_rate=sample_rate)
             else:
                 self.sentry_client = raven.Client(
-                    dsn=self.sentry_dsn,
-                    sample_rate=sample_rate,
+                    dsn=self.sentry_dsn, sample_rate=sample_rate
                 )
 
             sentry_handler = SentryHandler(self.sentry_client)
