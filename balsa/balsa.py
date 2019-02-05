@@ -127,6 +127,8 @@ class Balsa(object):
         Initialize the logger.  Call exactly once.
         """
 
+        assert(self.name is not None)
+        assert(self.author is not None)
         self.handlers = {}
         if self.is_root:
             self.log = logging.getLogger()
