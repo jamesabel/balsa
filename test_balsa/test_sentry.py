@@ -8,7 +8,15 @@ def test_balsa_sentry():
     application_name = 'test_balsa_sentry'
 
     if 'SENTRY_DSN' in os.environ:
-        balsa = Balsa(application_name, __author__, use_sentry=True, inhibit_cloud_services=False, is_root=False)
+        dsn = os.environ['SENTRY_DSN']
+        balsa = Balsa(
+            application_name,
+            __author__,
+            use_sentry=True,
+            inhibit_cloud_services=False,
+            is_root=False,
+            sentry_dsn=dsn
+        )
         balsa.init_logger()
 
         log = get_logger(application_name)

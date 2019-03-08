@@ -3,8 +3,7 @@ from glob import glob
 import logging
 import logging.handlers
 import traceback
-import raven
-from raven.handlers.logging import SentryHandler
+import sentry_sdk
 
 from balsa import (
     HandlerType,
@@ -23,7 +22,7 @@ log_dir_arg_string = "logdir"
 delete_existing_arg_string = "dellog"
 
 
-def get_logger(name):
+def get_logger(name: str) -> logging.Logger:
     """
     Special get_logger.  Typically name is the name of the application using Balsa.
     :param name: name of the logger to get, which is usually the application name. Optionally it can be a python file
@@ -40,7 +39,7 @@ def get_logger(name):
     return logging.getLogger(name)
 
 
-def traceback_string():
+def traceback_string() -> str:
     """
     Helper function that formats most recent traceback.  Useful when a program has an overall try/except
     and it wants to output the program trace to the log.
@@ -91,7 +90,6 @@ class Balsa(object):
 
     # sentry
     use_sentry = attrib(default=False)
-    sentry_client = attrib(default=None)
     sentry_dsn = attrib(default=None)
 
     # a separate rate limit for each level
@@ -204,20 +202,9 @@ class Balsa(object):
         self.handlers[HandlerType.StringList] = string_list_handler
 
         # setting up Sentry error handling
-        # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
-            if self.sentry_dsn is None:
-                self.sentry_client = raven.Client(sample_rate=sample_rate)
-            else:
-                self.sentry_client = raven.Client(
-                    dsn=self.sentry_dsn, sample_rate=sample_rate
-                )
-
-            sentry_handler = SentryHandler(self.sentry_client)
-            sentry_handler.setLevel(logging.ERROR)
-            self.handlers[HandlerType.Sentry] = sentry_handler
-            self.log.addHandler(sentry_handler)
+            sentry_sdk.init(self.sentry_dsn, sample_rate=sample_rate)
 
         # error handler for callback on error or above
         # (this is last since the user may do a sys.exit() in the error callback)
@@ -227,5 +214,5 @@ class Balsa(object):
             self.log.addHandler(error_callback_handler)
             self.handlers[HandlerType.Callback] = error_callback_handler
 
-    def get_string_list(self):
+    def get_string_list(self) -> list:
         return self.handlers[HandlerType.StringList].strings

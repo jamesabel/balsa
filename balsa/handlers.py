@@ -7,8 +7,7 @@ class HandlerType(Enum):
     File = 2
     DialogBox = 3
     Callback = 4
-    Sentry = 5
-    StringList = 6
+    StringList = 5
 
 
 class BalsaNullHandler(logging.NullHandler):
