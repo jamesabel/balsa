@@ -225,7 +225,14 @@ class Balsa(object):
                 integrations.append(SqlalchemyIntegration())
 
             if self.sentry_dsn is None:
-                raise ValueError(f"Missing sentry_dsn")
+                if 'SENTRY_DSN' not in os.environ:
+                    raise ValueError(f"Missing sentry_dsn")
+                else:
+                    sentry_sdk.init(
+                        dsn=os.environ['SENTRY_DSN'],
+                        sample_rate=sample_rate,
+                        integrations=integrations,
+                    )
             else:
                 sentry_sdk.init(
                     dsn=self.sentry_dsn,
