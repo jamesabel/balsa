@@ -3,8 +3,7 @@ from glob import glob
 import logging
 import logging.handlers
 import traceback
-import raven
-from raven.handlers.logging import SentryHandler
+import sentry_sdk
 
 from balsa import (
     HandlerType,
@@ -91,6 +90,10 @@ class Balsa(object):
 
     # sentry
     use_sentry = attrib(default=False)
+    use_sentry_flask = attrib(default=False)
+    use_sentry_django = attrib(default=False)
+    use_sentry_lambda = attrib(default=False)
+    use_sentry_sqlalchemy = attrib(default=False)
     sentry_client = attrib(default=None)
     sentry_dsn = attrib(default=None)
 
@@ -207,17 +210,28 @@ class Balsa(object):
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
-            if self.sentry_dsn is None:
-                self.sentry_client = raven.Client(sample_rate=sample_rate)
-            else:
-                self.sentry_client = raven.Client(
-                    dsn=self.sentry_dsn, sample_rate=sample_rate
-                )
+            integrations = []
+            if self.use_sentry_django:
+                from sentry_sdk.integrations.django import DjangoIntegration
+                integrations.append(DjangoIntegration())
+            if self.use_sentry_flask:
+                from sentry_sdk.integrations.flask import FlaskIntegration
+                integrations.append(FlaskIntegration())
+            if self.use_sentry_lambda:
+                from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+                integrations.append(AwsLambdaIntegration())
+            if self.use_sentry_sqlalchemy:
+                from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+                integrations.append(SqlalchemyIntegration())
 
-            sentry_handler = SentryHandler(self.sentry_client)
-            sentry_handler.setLevel(logging.ERROR)
-            self.handlers[HandlerType.Sentry] = sentry_handler
-            self.log.addHandler(sentry_handler)
+            if self.sentry_dsn is None:
+                raise ValueError(f"Missing sentry_dsn")
+            else:
+                sentry_sdk.init(
+                    dsn=self.sentry_dsn,
+                    sample_rate=sample_rate,
+                    integrations=integrations,
+                )
 
         # error handler for callback on error or above
         # (this is last since the user may do a sys.exit() in the error callback)

@@ -1,7 +1,7 @@
 appdirs
 attrs
 mttkinter
-raven
+sentry_sdk[flask]
 #
 # dev only
 sphinx
