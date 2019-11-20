@@ -13,6 +13,7 @@ pytest
 coverage
 pytest-cov
 PyQt5
+twine
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'
