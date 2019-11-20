@@ -94,6 +94,8 @@ class Balsa(object):
     use_sentry_django = attrib(default=False)
     use_sentry_lambda = attrib(default=False)
     use_sentry_sqlalchemy = attrib(default=False)
+    use_sentry_celery = attrib(default=False)
+
     sentry_client = attrib(default=None)
     sentry_dsn = attrib(default=None)
 
@@ -223,6 +225,9 @@ class Balsa(object):
             if self.use_sentry_sqlalchemy:
                 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
                 integrations.append(SqlalchemyIntegration())
+            if self.use_sentry_celery:
+                from sentry_sdk.integrations.celery import CeleryIntegration
+                integrations.append(CeleryIntegration())
 
             if self.sentry_dsn is None:
                 if 'SENTRY_DSN' not in os.environ:
