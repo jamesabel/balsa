@@ -69,6 +69,8 @@ class Balsa(object):
     backup_count = attrib(default=3)
     error_callback = attrib(default=None)
     max_string_list_entries = attrib(default=100)
+
+    use_file_logging = True
     log_directory = attrib(default=None)
     log_path = attrib(default=None)
     log_extension = attrib(default=".log")
@@ -151,36 +153,38 @@ class Balsa(object):
         if self.log.hasHandlers():
             self.log.info("Logger already initialized.")
 
-        # create file handler
-        if self.log_directory is None:
-            self.log_directory = appdirs.user_log_dir(self.name, self.author)
-        if self.log_directory is not None:
-            if self.delete_existing_log_files:
-                for file_path in glob(
-                    os.path.join(self.log_directory, "*%s" % self.log_extension)
-                ):
-                    try:
-                        os.remove(file_path)
-                    except OSError:
-                        pass
-            os.makedirs(self.log_directory, exist_ok=True)
-            self.log_path = os.path.join(
-                self.log_directory, "%s%s" % (self.name, self.log_extension)
-            )
-            file_handler = logging.handlers.RotatingFileHandler(
-                self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count
-            )
-            file_handler.setFormatter(self.log_formatter)
-            if self.verbose:
-                file_handler.setLevel(logging.DEBUG)
-            else:
-                file_handler.setLevel(logging.INFO)
-            self.log.addHandler(file_handler)
-            self.handlers[HandlerType.File] = file_handler
-            self.log.info(
-                'log file path : "%s" ("%s")'
-                % (self.log_path, os.path.abspath(self.log_path))
-            )
+        # use turn off file logging, e.g. for cloud environments where it's not recommended and/or possible to write to the local file system
+        if self.use_file_logging:
+            # create file handler
+            if self.log_directory is None:
+                self.log_directory = appdirs.user_log_dir(self.name, self.author)
+            if self.log_directory is not None:
+                if self.delete_existing_log_files:
+                    for file_path in glob(
+                        os.path.join(self.log_directory, "*%s" % self.log_extension)
+                    ):
+                        try:
+                            os.remove(file_path)
+                        except OSError:
+                            pass
+                os.makedirs(self.log_directory, exist_ok=True)
+                self.log_path = os.path.join(
+                    self.log_directory, "%s%s" % (self.name, self.log_extension)
+                )
+                file_handler = logging.handlers.RotatingFileHandler(
+                    self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count
+                )
+                file_handler.setFormatter(self.log_formatter)
+                if self.verbose:
+                    file_handler.setLevel(logging.DEBUG)
+                else:
+                    file_handler.setLevel(logging.INFO)
+                self.log.addHandler(file_handler)
+                self.handlers[HandlerType.File] = file_handler
+                self.log.info(
+                    'log file path : "%s" ("%s")'
+                    % (self.log_path, os.path.abspath(self.log_path))
+                )
 
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
