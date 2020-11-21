@@ -57,9 +57,7 @@ def traceback_string():
 class Balsa(object):
 
     # commonly used options
-    name = attrib(
-        default=None
-    )  # even if this is root, use the name for the log file name
+    name = attrib(default=None)  # even if this is root, use the name for the log file name
     author = attrib(default=None)
     verbose = attrib(default=False)
     gui = attrib(default=False)
@@ -74,17 +72,13 @@ class Balsa(object):
     log_directory = attrib(default=None)
     log_path = attrib(default=None)
     log_extension = attrib(default=".log")
-    log_formatter = attrib(
-        default=logging.Formatter(
-            "%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s"
-        )
-    )
+    log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
+    log_console_prefix = attrib(default="")  # set to "\r" (rewrite existing line) or "\n" (new line) to avoid logs appended to current line
+
     handlers = attrib(default=None)
     log = attrib(default=None)
     is_root = attrib(default=True)
-    propagate = attrib(
-        default=True
-    )  # set to False for this logger to be independent of parent(s)
+    propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
@@ -134,8 +128,10 @@ class Balsa(object):
         Initialize the logger.  Call exactly once.
         """
 
-        assert(self.name is not None)
-        assert(self.author is not None)
+        log_formatter = logging.Formatter(self.log_formatter_string)
+
+        assert self.name is not None
+        assert self.author is not None
         self.handlers = {}
         if self.is_root:
             self.log = logging.getLogger()
@@ -160,31 +156,22 @@ class Balsa(object):
                 self.log_directory = appdirs.user_log_dir(self.name, self.author)
             if self.log_directory is not None:
                 if self.delete_existing_log_files:
-                    for file_path in glob(
-                        os.path.join(self.log_directory, "*%s" % self.log_extension)
-                    ):
+                    for file_path in glob(os.path.join(self.log_directory, "*%s" % self.log_extension)):
                         try:
                             os.remove(file_path)
                         except OSError:
                             pass
                 os.makedirs(self.log_directory, exist_ok=True)
-                self.log_path = os.path.join(
-                    self.log_directory, "%s%s" % (self.name, self.log_extension)
-                )
-                file_handler = logging.handlers.RotatingFileHandler(
-                    self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count
-                )
-                file_handler.setFormatter(self.log_formatter)
+                self.log_path = os.path.join(self.log_directory, "%s%s" % (self.name, self.log_extension))
+                file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
+                file_handler.setFormatter(log_formatter)
                 if self.verbose:
                     file_handler.setLevel(logging.DEBUG)
                 else:
                     file_handler.setLevel(logging.INFO)
                 self.log.addHandler(file_handler)
                 self.handlers[HandlerType.File] = file_handler
-                self.log.info(
-                    'log file path : "%s" ("%s")'
-                    % (self.log_path, os.path.abspath(self.log_path))
-                )
+                self.log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
 
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
@@ -198,7 +185,8 @@ class Balsa(object):
             self.handlers[HandlerType.DialogBox] = dialog_box_handler
         else:
             console_handler = logging.StreamHandler()
-            console_handler.setFormatter(self.log_formatter)
+            # prefix for things like "\n" or "\r"
+            console_handler.setFormatter(logging.Formatter(f"{self.log_console_prefix}{self.log_formatter_string}"))
             if self.verbose:
                 console_handler.setLevel(logging.INFO)
             else:
@@ -207,7 +195,7 @@ class Balsa(object):
             self.handlers[HandlerType.Console] = console_handler
 
         string_list_handler = BalsaStringListHandler(self.max_string_list_entries)
-        string_list_handler.setFormatter(self.log_formatter)
+        string_list_handler.setFormatter(log_formatter)
         string_list_handler.setLevel(logging.INFO)
         self.log.addHandler(string_list_handler)
         self.handlers[HandlerType.StringList] = string_list_handler
@@ -219,26 +207,31 @@ class Balsa(object):
             integrations = []
             if self.use_sentry_django:
                 from sentry_sdk.integrations.django import DjangoIntegration
+
                 integrations.append(DjangoIntegration())
             if self.use_sentry_flask:
                 from sentry_sdk.integrations.flask import FlaskIntegration
+
                 integrations.append(FlaskIntegration())
             if self.use_sentry_lambda:
                 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+
                 integrations.append(AwsLambdaIntegration())
             if self.use_sentry_sqlalchemy:
                 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
                 integrations.append(SqlalchemyIntegration())
             if self.use_sentry_celery:
                 from sentry_sdk.integrations.celery import CeleryIntegration
+
                 integrations.append(CeleryIntegration())
 
             if self.sentry_dsn is None:
-                if 'SENTRY_DSN' not in os.environ:
-                    raise ValueError(f"Missing sentry_dsn")
+                if "SENTRY_DSN" not in os.environ:
+                    raise ValueError("Missing sentry_dsn")
                 else:
                     sentry_sdk.init(
-                        dsn=os.environ['SENTRY_DSN'],
+                        dsn=os.environ["SENTRY_DSN"],
                         sample_rate=sample_rate,
                         integrations=integrations,
                     )
