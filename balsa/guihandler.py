@@ -62,10 +62,7 @@ class DialogBoxHandler(logging.NullHandler):
         else:
             # no limit for custom levels
             rate_limit = {"count": 1000, "time": 0.0}
-        if (
-            self.start_display_time_window is None
-            or now - self.start_display_time_window >= rate_limit["time"]
-        ):
+        if self.start_display_time_window is None or now - self.start_display_time_window >= rate_limit["time"]:
             self.count = 0
             self.start_display_time_window = now
         if self.count < rate_limit["count"]:
@@ -77,9 +74,7 @@ class DialogBoxHandler(logging.NullHandler):
                     logging.CRITICAL: messagebox.showerror,  # Tk doesn't go any higher than error
                 }
                 tk = init_tkinter()
-                boxes[record.levelno](
-                    "%s : %s" % (record.name, record.levelname), record.msg, parent=tk
-                )
+                boxes[record.levelno]("%s : %s" % (record.name, record.levelname), record.msg, parent=tk)
             elif pyqt_present:
                 boxes = {
                     logging.INFO: PyQt5.QMessageBox.info,
@@ -101,6 +96,4 @@ class DialogBoxHandler(logging.NullHandler):
                     messagebox.showinfo(t, s, parent=tk)
                 elif pyqt_present:
                     PyQt5.QMessageBox.info(self, t, s)
-            self.start_display_time_window = (
-                now
-            )  # window is the time when the last window was closed
+            self.start_display_time_window = now  # window is the time when the last window was closed

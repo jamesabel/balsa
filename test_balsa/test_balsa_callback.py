@@ -1,4 +1,3 @@
-
 from balsa import get_logger, Balsa, __author__
 
 log = get_logger(__file__)
@@ -9,14 +8,13 @@ def my_callback(log_record):
 
 
 def test_balsa_callback():
-    application_name = 'test_balsa_callback'
+    application_name = "test_balsa_callback"
 
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory='temp', error_callback=my_callback,
-                  is_root=False)
+    balsa = Balsa(application_name, __author__, verbose=True, log_directory="temp", error_callback=my_callback, is_root=False)
     balsa.init_logger()
 
-    log.error('test error message')
+    log.error("test error message")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_balsa_callback()

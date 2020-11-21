@@ -1,4 +1,3 @@
-
 import time
 import threading
 import logging
@@ -12,14 +11,14 @@ from test_balsa import enter_press_time
 def press_enter():
     for _ in range(0, 2):
         time.sleep(enter_press_time)
-        pyautogui.press('enter')
+        pyautogui.press("enter")
 
 
 def test_balsa_exception():
-    application_name = 'test_balsa_exception'
+    application_name = "test_balsa_exception"
 
     balsa = Balsa(application_name, __author__, gui=True, is_root=False)
-    balsa.rate_limits[logging.ERROR]['count'] = 4  # we have 3 messages
+    balsa.rate_limits[logging.ERROR]["count"] = 4  # we have 3 messages
     balsa.init_logger()
 
     log = get_logger(application_name)
@@ -28,13 +27,13 @@ def test_balsa_exception():
     press_enter_thread.start()
 
     try:
-        a = 1.0/0.0  # generate an exception for testing (not a real error)
+        a = 1.0 / 0.0  # generate an exception for testing (not a real error)
     except ZeroDivisionError:
-        log.error('test exception')
+        log.error("test exception")
         log.error(traceback_string())
 
     press_enter_thread.join()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_balsa_exception()

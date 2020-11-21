@@ -1,7 +1,6 @@
-
 from balsa import get_logger, Balsa, __author__
 
-application_name = 'test_balsa'
+application_name = "test_balsa"
 
 log = get_logger(application_name)
 
