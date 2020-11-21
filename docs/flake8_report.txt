@@ -1,0 +1,1 @@
+balsa\balsa.py:237:38: F541 f-string is missing placeholders
