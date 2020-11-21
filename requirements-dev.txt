@@ -14,6 +14,7 @@ coverage
 pytest-cov
 PyQt5
 twine
+flake8
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'
