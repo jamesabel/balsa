@@ -22,7 +22,7 @@ setup(
     download_url=__download_url__,
     keywords=["logging", "utility"],
     packages=[__title__],
-    package_data={__title__: [readme_file_path]},
+    package_data={__title__: [readme_file_path, "py.typed"]},
     install_requires=["appdirs", "attrs", "sentry-sdk", "mttkinter"],
     classifiers=[],
 )

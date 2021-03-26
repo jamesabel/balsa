@@ -15,10 +15,11 @@ pytest-cov
 PyQt5
 twine
 flake8
+mypy
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'
 pyobjc; sys_platform == 'darwin'
-pyautogui
+pyautogui; sys_platform == 'darwin'
 #
 pygments
