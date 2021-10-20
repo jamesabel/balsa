@@ -3,14 +3,11 @@ from glob import glob
 import logging
 import logging.handlers
 import traceback
+import json
+
 import sentry_sdk
 
-from balsa import (
-    HandlerType,
-    BalsaNullHandler,
-    DialogBoxHandler,
-    BalsaStringListHandler,
-)
+from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, convert_serializable_special_cases
 
 
 import appdirs
@@ -37,6 +34,27 @@ def get_logger(name):
             name = name.split(os.sep)[-1]
 
     return logging.getLogger(name)
+
+
+def sf(*args, **kwargs):
+    """
+    Structured formatter helper function. When called with any number of positional or keyword arguments, creates a structured string representing those arguments.
+    This is a short function name (sf) since it usually goes inside a logging call.
+
+    Example code:
+    question = "life"
+    answer = 42
+    log.info(sf("test structured logging", question=question, answer=answer))
+
+    log:
+    2021-10-19 23:46:15,962 - test_structured_logging - test_structured_logging.py - 17 - test_structured_logging - INFO - test structured logging,question(str)="life",answer(int)=42
+
+    :param args: args
+    :param kwargs: kwargs
+    """
+
+    # use json.dumps to handle special strings (e.g. embedded quotes)
+    return ",".join(args + tuple(f"{k}({type(v).__name__})={json.dumps(v, default=convert_serializable_special_cases)}" for k, v in kwargs.items()))
 
 
 def traceback_string():

@@ -7,7 +7,12 @@ pyqt_present = None
 try:
     # embedded Python does not have tkinter
     import tkinter
-    from tkinter.simpledialog import messagebox
+
+    try:
+        from tkinter import messagebox
+    except ModuleNotFoundError:
+        from tkinter.simpledialog import messagebox
+
     from mttkinter import (
         mtTkinter,
     )  # merely importing this puts it in use (do not delete even though it seems to not be used)
