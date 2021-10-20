@@ -7,13 +7,7 @@ import json
 
 import sentry_sdk
 
-from balsa import (
-    HandlerType,
-    BalsaNullHandler,
-    DialogBoxHandler,
-    BalsaStringListHandler,
-    convert_serializable_special_cases
-)
+from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, convert_serializable_special_cases
 
 
 import appdirs
