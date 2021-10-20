@@ -14,6 +14,7 @@ coverage
 pytest-cov
 ismain
 PyQt5
+PyQt5-stubs
 twine
 flake8
 mypy

@@ -11,7 +11,7 @@ try:
     try:
         from tkinter import messagebox
     except ModuleNotFoundError:
-        from tkinter.simpledialog import messagebox
+        from tkinter.simpledialog import messagebox  # type: ignore
 
     from mttkinter import (
         mtTkinter,
