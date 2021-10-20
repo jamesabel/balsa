@@ -1,3 +1,5 @@
+from ismain import is_main
+
 from balsa import get_logger, Balsa, __author__
 
 
@@ -11,5 +13,5 @@ def test_balsa_simple():
     log.error("test error message")
 
 
-if __name__ == "__main__":
+if is_main():
     test_balsa_simple()
