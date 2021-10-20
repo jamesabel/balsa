@@ -6,9 +6,7 @@ try:
 
     from balsa import get_logger, Balsa, __author__, traceback_string
 
-
     exception_complete = False
-
 
     class QtGuiThread(QThread):
         def run(self):
@@ -24,7 +22,6 @@ try:
                 print(f"{application_name} - after error log")
                 exception_complete = True
 
-
     class GuiThread(Thread):
         def run(self):
             global exception_complete
@@ -38,7 +35,6 @@ try:
                 log.error(traceback_string())
                 print(f"{application_name} - after error log")
                 exception_complete = True
-
 
     def test_threaded_gui():
 
