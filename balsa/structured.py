@@ -78,7 +78,7 @@ def sf(*args, **kwargs):
     return f" ".join(output_list)
 
 
-balsa_log_regex = re.compile(r"([0-9\-:T.]+) - ([\S]+) - ([\S]+) - ([0-9]+) - ([\S]+) - (NOTSET|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL) - (.*)", flags=re.IGNORECASE)
+balsa_log_regex = re.compile(r"([0-9\-:T.]+) - ([\S]+) - ([\S]+) - ([0-9]+) - ([\S]+) - (NOTSET|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL) - (.*)", flags=re.IGNORECASE | re.DOTALL)
 
 
 class BalsaRecord:
@@ -109,15 +109,17 @@ class BalsaRecord:
 
         self.structured_record = {}
         structured_string = groups[7].strip()
-        if structured_string.endswith(structured_sentinel):
-            if (start_structured_string := structured_string.find(structured_sentinel)) >= 0:
-                start_json = start_structured_string+len(structured_sentinel)+1
-                json_string = structured_string[start_json:-len(structured_sentinel)]
-                self.message = structured_string[:start_json]
-                try:
-                    self.structured_record = json.loads(json_string)
-                except json.JSONDecodeError:
-                    log.warning(f"could not decode {json_string}")
+        if structured_string.endswith(structured_sentinel) and (start_structured_string := structured_string.find(structured_sentinel)) >= 0:
+            start_json = start_structured_string+len(structured_sentinel)+1
+            json_string = structured_string[start_json:-len(structured_sentinel)]
+            self.message = structured_string[:start_json]
+            try:
+                self.structured_record = json.loads(json_string)
+            except json.JSONDecodeError:
+                log.warning(f"could not JSON decode : {json_string}")
+                self.message += f" {structured_sentinel} {json_string} {structured_sentinel}"  # fallback if we can't decode the JSON, at least have it as part of the message string
+        else:
+            self.message = structured_string  # no JSON part
 
     def __repr__(self):
         log_level = logging.getLevelName(self.log_level)
@@ -126,11 +128,12 @@ class BalsaRecord:
         structured_string = ""
         if len(self.message) > 0:
             structured_string = self.message
-        json_string = json.dumps(self.structured_record)
-        if len(json_string) > 0:
+        if len(self.structured_record) > 0:
+            json_string = json.dumps(self.structured_record)
             structured_string += f"{json_string} {structured_sentinel}"
         if len(structured_string) > 0:
             fields.append(structured_string)
 
         output_string = " - ".join(fields)
         return output_string
+
