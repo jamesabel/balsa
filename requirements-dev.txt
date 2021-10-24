@@ -3,6 +3,7 @@ attrs
 mttkinter
 sentry-sdk
 sentry-sdk[flask]
+python-dateutil
 #
 # dev only
 sphinx
@@ -18,6 +19,7 @@ PyQt5-stubs
 twine
 flake8
 mypy
+types-python-dateutil
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'

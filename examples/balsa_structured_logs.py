@@ -11,7 +11,8 @@ def main():
     balsa.init_logger()
 
     my_value = 42
-    log.info(sf(my_value=my_value))
+    my_name = "me"
+    log.info(sf("myapp", my_name=my_name, my_value=my_value))
 
 
 if __name__ == '__main__':
