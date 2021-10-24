@@ -3,6 +3,7 @@ attrs
 mttkinter
 sentry-sdk
 sentry-sdk[flask]
+python-dateutil
 #
 # dev only
 sphinx

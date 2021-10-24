@@ -1,4 +1,5 @@
 __title__ = "balsa"
+__application_name__ = __title__
 __description__ = "logging utility"
 __url__ = "https://github.com/jamesabel/balsa"
 __download_url__ = "https://github.com/jamesabel/balsa/archive/master.zip"

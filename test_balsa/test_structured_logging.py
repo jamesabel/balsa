@@ -1,10 +1,9 @@
 from ismain import is_main
 
-from balsa import __author__, Balsa, get_logger
-from balsa import sf
+from balsa import __author__, Balsa, get_logger, sf
 
 
-def test_structured_logging():
+def test_to_structured_logging():
     application_name = "test_structured_logging"
 
     balsa = Balsa(application_name, __author__, verbose=True)
@@ -20,11 +19,11 @@ def test_structured_logging():
     newline_string = "a\nnewline"
     some_float = 3.3
     a_bool = True
-    log.info(sf("test 2", "more,stuff", question=question, answer=answer, newline_string=newline_string, crazy=crazy, some_float=some_float, a_bool=a_bool))
+    log.info(sf("test", "more,stuff", question=question, answer=answer, newline_string=newline_string, crazy=crazy, some_float=some_float, a_bool=a_bool))
 
     complex_value = 1 + 2j
     log.info(sf(complex_value=complex_value))
 
 
 if is_main():
-    test_structured_logging()
+    test_to_structured_logging()
