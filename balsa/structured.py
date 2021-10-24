@@ -85,6 +85,7 @@ class BalsaRecord:
     """
     Balsa log record as a class.
     """
+
     time_stamp: datetime
     name: str
     file_name: str
@@ -110,8 +111,8 @@ class BalsaRecord:
         self.structured_record = {}
         structured_string = groups[7].strip()
         if structured_string.endswith(structured_sentinel) and (start_structured_string := structured_string.find(structured_sentinel)) >= 0:
-            start_json = start_structured_string+len(structured_sentinel)+1
-            json_string = structured_string[start_json:-len(structured_sentinel)]
+            start_json = start_structured_string + len(structured_sentinel) + 1
+            json_string = structured_string[start_json : -len(structured_sentinel)]
             self.message = structured_string[:start_json]
             try:
                 self.structured_record = json.loads(json_string)

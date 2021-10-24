@@ -18,7 +18,7 @@ def test_to_structured_logging():
     # todo: get these to work
     # crazy = 'a "crazy" string'
     # newline_string = "a\nnewline"
-    crazy = 'a crazy string'
+    crazy = "a crazy string"
     newline_string = "anewline"
 
     some_float = 3.3
