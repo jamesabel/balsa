@@ -62,7 +62,7 @@ def sf(*args, **kwargs):
     log.info(sf("test structured logging", question=question, answer=answer))
 
     log:
-    2021-10-19 23:46:15,962 - test_structured_logging - test_structured_logging.py - 17 - test_structured_logging - INFO - test structured logging,question(str)="life",answer(int)=42
+    2021-10-24T10:38:54.524721-07:00 - test_structured_logging - test_structured_logging.py - 16 - test_to_structured_logging - INFO - test structured logging <> {"question": "life", "answer": 42} <>
 
     :param args: args
     :param kwargs: kwargs
@@ -83,7 +83,7 @@ balsa_log_regex = re.compile(r"([0-9\-:T.]+) - ([\S]+) - ([\S]+) - ([0-9]+) - ([
 
 class BalsaRecord:
     """
-    given a log string, covert it to a Balsa record
+    Balsa log record as a class.
     """
     time_stamp: datetime
     name: str
@@ -96,7 +96,7 @@ class BalsaRecord:
 
     def __init__(self, log_string: str):
         """
-        convert log string to Balsa record
+        Convert log string to Balsa record.
         :param log_string: log string
         """
         groups = balsa_log_regex.match(log_string)
@@ -122,6 +122,10 @@ class BalsaRecord:
             self.message = structured_string  # no JSON part
 
     def __repr__(self):
+        """
+        Create a log string from this object. Balsa's structured logs are invertible, i.e. you can give BalsaRecord a log string and then this repr will produce the original string.
+        :return: log string
+        """
         log_level = logging.getLevelName(self.log_level)
         fields = [self.time_stamp.astimezone().isoformat(), self.name, self.file_name, str(self.line_number), self.function_name, log_level]
 
@@ -136,4 +140,3 @@ class BalsaRecord:
 
         output_string = " - ".join(fields)
         return output_string
-
