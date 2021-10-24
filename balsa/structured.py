@@ -75,7 +75,7 @@ def sf(*args, **kwargs):
     if len(kwargs) > 0:
         # use json.dumps to handle special strings (e.g. embedded quotes)
         output_list.extend([structured_sentinel, json.dumps(kwargs, default=convert_serializable_special_cases), structured_sentinel])
-    return f" ".join(output_list)
+    return " ".join(output_list)
 
 
 balsa_log_regex = re.compile(r"([0-9\-:T.]+) - ([\S]+) - ([\S]+) - ([0-9]+) - ([\S]+) - (NOTSET|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL) - (.*)", flags=re.IGNORECASE | re.DOTALL)
@@ -100,27 +100,36 @@ class BalsaRecord:
         Convert log string to Balsa record.
         :param log_string: log string
         """
-        groups = balsa_log_regex.match(log_string)
-        self.time_stamp = dateutil.parser.parse(groups[1])
-        self.name = groups[2]
-        self.file_name = groups[3]
-        self.line_number = int(groups[4])
-        self.function_name = groups[5]
-        self.log_level = getattr(logging, groups[6])  # log level as an integer value
-
-        self.structured_record = {}
-        structured_string = groups[7].strip()
-        if structured_string.endswith(structured_sentinel) and (start_structured_string := structured_string.find(structured_sentinel)) >= 0:
-            start_json = start_structured_string + len(structured_sentinel) + 1
-            json_string = structured_string[start_json : -len(structured_sentinel)]
-            self.message = structured_string[:start_json]
-            try:
-                self.structured_record = json.loads(json_string)
-            except json.JSONDecodeError:
-                log.warning(f"could not JSON decode : {json_string}")
-                self.message += f" {structured_sentinel} {json_string} {structured_sentinel}"  # fallback if we can't decode the JSON, at least have it as part of the message string
+        if (groups := balsa_log_regex.match(log_string)) is None:
+            self.time_stamp = datetime.now()
+            self.name = ""
+            self.file_name = ""
+            self.line_number = 0
+            self.function_name = ""
+            self.log_level = logging.NOTSET
+            self.message = ""
+            self.structured_record = {}
         else:
-            self.message = structured_string  # no JSON part
+            self.time_stamp = dateutil.parser.parse(groups.group(1))
+            self.name = groups.group(2)
+            self.file_name = groups.group(3)
+            self.line_number = int(groups.group(4))
+            self.function_name = groups.group(5)
+            self.log_level = getattr(logging, groups.group(6))  # log level as an integer value
+
+            self.structured_record = {}
+            structured_string = groups.group(7).strip()
+            if structured_string.endswith(structured_sentinel) and (start_structured_string := structured_string.find(structured_sentinel)) >= 0:
+                start_json = start_structured_string + len(structured_sentinel) + 1
+                json_string = structured_string[start_json : -len(structured_sentinel)]
+                self.message = structured_string[:start_json]
+                try:
+                    self.structured_record = json.loads(json_string)
+                except json.JSONDecodeError:
+                    log.warning(f"could not JSON decode : {json_string}")
+                    self.message += f" {structured_sentinel} {json_string} {structured_sentinel}"  # fallback if we can't decode the JSON, at least have it as part of the message string
+            else:
+                self.message = structured_string  # no JSON part
 
     def __repr__(self):
         """
