@@ -3,6 +3,7 @@ from glob import glob
 import logging
 import logging.handlers
 import traceback
+import sys
 
 import sentry_sdk
 
@@ -46,6 +47,25 @@ def traceback_string():
         display_lines_list = [str(exc_value)] + traceback.format_tb(exc_traceback)
         tb_string = "\n".join(display_lines_list)
     return tb_string
+
+
+class StreamToLogger:
+    """
+    Fake file-like stream object that redirects writes to a logger instance, useful for stdout and stderr.
+    """
+
+    def __init__(self, logger, level):
+        self.logger = logger
+        self.level = level
+
+    def write(self, buf):
+        for line in buf.strip().splitlines():
+            stripped_line = line.strip()
+            if len(stripped_line) > 0:
+                self.logger.log(self.level, stripped_line)
+
+    def flush(self):
+        self.logger.flush()
 
 
 @attrs
@@ -178,6 +198,8 @@ class Balsa(object):
                 dialog_box_handler.setLevel(logging.ERROR)
             self.log.addHandler(dialog_box_handler)
             self.handlers[HandlerType.DialogBox] = dialog_box_handler
+
+            self.set_std()  # redirect stdout and stderr to log
         else:
             console_handler = logging.StreamHandler()
             # prefix for things like "\n" or "\r"
@@ -244,6 +266,18 @@ class Balsa(object):
             error_callback_handler.setLevel(logging.ERROR)
             self.log.addHandler(error_callback_handler)
             self.handlers[HandlerType.Callback] = error_callback_handler
+
+    def set_std(self):
+        """
+        Send stdout and stderr to logs. Generally used for GUI apps since GUI apps should not write to stdout or stderr. Derived classes can override this method to choose a
+        different set of levels (or just "pass" to avoid the redirect completely).
+        """
+        if self.verbose:
+            sys.stdout = StreamToLogger(self.log, logging.WARNING)
+            sys.stderr = StreamToLogger(self.log, logging.WARNING)
+        else:
+            sys.stdout = StreamToLogger(self.log, logging.INFO)
+            sys.stderr = StreamToLogger(self.log, logging.INFO)
 
     def get_string_list(self):
         return self.handlers[HandlerType.StringList].strings
