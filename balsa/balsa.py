@@ -54,18 +54,18 @@ class StreamToLogger:
     Fake file-like stream object that redirects writes to a logger instance, useful for stdout and stderr.
     """
 
-    def __init__(self, logger, level):
+    def __init__(self, logger: logging.Logger, level: int):
         self.logger = logger
         self.level = level
 
-    def write(self, buf):
+    def write(self, buf: str):
         for line in buf.strip().splitlines():
             stripped_line = line.strip()
             if len(stripped_line) > 0:
                 self.logger.log(self.level, stripped_line)
 
     def flush(self):
-        self.logger.flush()
+        pass
 
 
 @attrs
@@ -189,7 +189,7 @@ class Balsa(object):
                 self.log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
 
         if self.gui:
-            # GUI will only pop up a dialog box - it's important that GUI not try to output to stdout or stderr
+            # GUI will only pop up a dialog box - it's important that GUI apps not try to output to stdout or stderr
             # since that would likely cause a permissions error.
             dialog_box_handler = DialogBoxHandler(self.rate_limits)
             if self.verbose:
