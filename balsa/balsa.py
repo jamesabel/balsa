@@ -1,10 +1,13 @@
+import argparse
 import os
-from glob import glob
 import logging
 import logging.handlers
 import traceback
 import sys
+from typing import List, Union, Dict, Any
+from pathlib import Path
 
+import attr
 import sentry_sdk
 
 from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, BalsaFormatter
@@ -20,7 +23,7 @@ delete_existing_arg_string = "dellog"
 
 def get_logger(name):
     """
-    Special get_logger.  Typically name is the name of the application using Balsa.
+    Special get_logger.  Typically, name is the name of the application using Balsa.
     :param name: name of the logger to get, which is usually the application name. Optionally it can be a python file
     name or path (e.g. __file__).
     :return: the logger for the logger name
@@ -37,7 +40,7 @@ def get_logger(name):
 
 def traceback_string():
     """
-    Helper function that formats most recent traceback.  Useful when a program has an overall try/except
+    Helper function that formats most recent traceback.  Useful when a program has an overall try/except,
     and it wants to output the program trace to the log.
     :return: formatted traceback string (or None if no traceback available)
     """
@@ -72,22 +75,21 @@ class StreamToLogger:
 class Balsa(object):
 
     # commonly used options
-    name = attrib(default=None)  # even if this is root, use the name for the log file name
-    author = attrib(default=None)
-    verbose = attrib(default=False)
-    gui = attrib(default=False)
-    delete_existing_log_files = attrib(default=False)
+    name = attrib(default=None, type=str)  # log name
+    author = attrib(default=None, type=str)
+    verbose = attrib(default=False, type=bool)
+    gui = attrib(default=False, type=bool)
+    delete_existing_log_files = attrib(default=False, type=bool)
 
-    max_bytes = attrib(default=100 * 1e6)
-    backup_count = attrib(default=3)
+    max_bytes = attrib(default=100 * 1e6, type=float)
+    backup_count = attrib(default=3, type=int)
     error_callback = attrib(default=None)
-    max_string_list_entries = attrib(default=100)
+    max_string_list_entries = attrib(default=100, type=int)
 
-    use_file_logging = True
-    log_directory = attrib(default=None)
-    log_path = attrib(default=None)
+    log_directory = attrib(default=None)  # type: Union[Path, str]
+    log_path = attrib(default=None, type=Path)
     log_extension = attrib(default=".log")
-    log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
+    log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(processName)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
     log_console_prefix = attrib(default="")  # set to "\r" (rewrite existing line) or "\n" (new line) to avoid logs appended to current line
 
     handlers = attrib(default=None)
@@ -97,18 +99,22 @@ class Balsa(object):
 
     # cloud services
     # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
-    inhibit_cloud_services = attrib(default=False)
+    inhibit_cloud_services = attrib(default=False, type=bool)
 
     # sentry
-    use_sentry = attrib(default=False)
-    use_sentry_flask = attrib(default=False)
-    use_sentry_django = attrib(default=False)
-    use_sentry_lambda = attrib(default=False)
-    use_sentry_sqlalchemy = attrib(default=False)
-    use_sentry_celery = attrib(default=False)
+    use_sentry = attrib(default=False, type=bool)
+    use_sentry_flask = attrib(default=False, type=bool)
+    use_sentry_django = attrib(default=False, type=bool)
+    use_sentry_lambda = attrib(default=False, type=bool)
+    use_sentry_sqlalchemy = attrib(default=False, type=bool)
+    use_sentry_celery = attrib(default=False, type=bool)
 
     sentry_client = attrib(default=None)
-    sentry_dsn = attrib(default=None)
+    sentry_dsn = attrib(default=None, type=str)
+
+    instance_name = attrib(default=None, type=str)
+
+    use_file_logging = True
 
     # a separate rate limit for each level
     rate_limits = attrib(
@@ -125,13 +131,13 @@ class Balsa(object):
         }
     )
 
-    def init_logger_from_args(self, args):
+    def init_logger_from_args(self, args: argparse.Namespace):
         """
         init logger from (specific) command line args
         :param args: args object, e.g. from argparse's parse_args()
         """
         if hasattr(args, log_dir_arg_string) and args.logdir is not None:
-            self.log_directory = args.logdir
+            self.log_directory = Path(args.logdir)
         if hasattr(args, verbose_arg_string) and args.verbose is True:
             self.verbose = True
         if hasattr(args, delete_existing_arg_string) and args.dellog is True:
@@ -168,16 +174,27 @@ class Balsa(object):
         if self.use_file_logging:
             # create file handler
             if self.log_directory is None:
-                self.log_directory = appdirs.user_log_dir(self.name, self.author)
+                self.log_directory = Path(appdirs.user_log_dir(self.name, self.author))
+
             if self.log_directory is not None:
+
+                if isinstance(self.log_directory, str):
+                    self.log_directory = Path(self.log_directory)
+
+                self.log_directory.mkdir(parents=True, exist_ok=True)
                 if self.delete_existing_log_files:
-                    for file_path in glob(os.path.join(self.log_directory, "*%s" % self.log_extension)):
+                    for file_path in Path.glob(self.log_directory, f"*{self.log_extension}"):
                         try:
-                            os.remove(file_path)
+                            file_path.unlink()
                         except OSError:
                             pass
-                os.makedirs(self.log_directory, exist_ok=True)
-                self.log_path = os.path.join(self.log_directory, "%s%s" % (self.name, self.log_extension))
+
+                if self.instance_name is None:
+                    file_name = f"{self.name}{self.log_extension}"
+                else:
+                    file_name = f"{self.name}_{self.instance_name}{self.log_extension}"
+                self.log_path = Path(self.log_directory, file_name)
+
                 file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
                 file_handler.setFormatter(log_formatter)
                 if self.verbose:
@@ -186,7 +203,7 @@ class Balsa(object):
                     file_handler.setLevel(logging.INFO)
                 self.log.addHandler(file_handler)
                 self.handlers[HandlerType.File] = file_handler
-                self.log.info('log file path : "%s" ("%s")' % (self.log_path, os.path.abspath(self.log_path)))
+                self.log.info(f'log file path : "{self.log_path}" ("{self.log_path.absolute()}")')
 
         if self.gui:
             # GUI will only pop up a dialog box - it's important that GUI apps not try to output to stdout or stderr
@@ -279,5 +296,43 @@ class Balsa(object):
             sys.stdout = StreamToLogger(self.log, logging.INFO)
             sys.stderr = StreamToLogger(self.log, logging.INFO)
 
-    def get_string_list(self):
+    def get_log_path(self) -> Path:
+        if self.instance_name is None:
+            file_name = "{self.name}{self.log_extension}"
+        else:
+            file_name = "{self.name}_{self.instance_name}{self.log_extension}"
+        log_path = Path(self.log_directory, file_name)
+        return log_path
+
+    def get_string_list(self) -> List[str]:
+        """
+        Get a list of strings with the most recent logs.
+        :return:
+        """
         return self.handlers[HandlerType.StringList].strings
+
+    def config_as_dict(self) -> Dict[str, Any]:
+        """
+        Get the Balsa configuration as a dict. Useful for passing to balsa_clone().
+        :return: dict of Balsa configuration
+        """
+        config = {}
+        config_types = [bool, str, Path, int, float]  # only pickle-able types
+        for k, v in attr.asdict(self).items():
+            if any([isinstance(v, config_type) for config_type in config_types]):
+                config[k] = v
+        return config
+
+
+def balsa_clone(original_dict: Dict[str, Any], instance_name: str) -> Balsa:
+    """
+    Create another instance of this Balsa and modify it with a given instance name. This is particularly useful for multiprocessing.
+    :param original_dict: dict of the Balsa instance from
+    :param instance_name: unique name of the new instance
+    :return: a Balsa instance
+    """
+
+    original_dict["instance_name"] = instance_name
+    original_dict["delete_existing_log_files"] = False
+    new_balsa = attr.evolve(Balsa(), **original_dict)  # deletion of existing log files is only possible by the original Balsa instance
+    return new_balsa
