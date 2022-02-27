@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Dict, Any
-
 from multiprocessing import Process
 
 from balsa import Balsa, __author__, get_logger, balsa_clone
@@ -18,8 +17,6 @@ class MyProcess(Process):
         # creating the balsa instance must be in the run method (not __init__() )
         balsa = balsa_clone(self.parent_balsa_as_dict, self.name)  # use the Process's name as the cloned logger's name
         balsa.init_logger()
-        print(f"{balsa.instance_name=}")
-        print(f"{balsa.log_path=}")
 
         log = get_logger(application_name)
         log.info(f"hello from {self.name}")
@@ -27,7 +24,9 @@ class MyProcess(Process):
 
 def test_multiprocessing():
 
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory=Path("temp", application_name).absolute(), delete_existing_log_files=True)
+    log_directory = Path("temp", application_name)
+
+    balsa = Balsa(application_name, __author__, verbose=True, log_directory=log_directory, delete_existing_log_files=True)
     balsa.init_logger()
 
     log = get_logger(application_name)
@@ -38,5 +37,12 @@ def test_multiprocessing():
     my_process = MyProcess(balsa_config)
     my_process.start()
     my_process.join()
+
+    process_log_file_path = Path(log_directory, f"{application_name}_a.log")
+    assert process_log_file_path.exists()
+    log_text = process_log_file_path.read_text()
+    # check everything except the timestamp and line number
+    assert "test_balsa_multiprocess - a - test_multiprocessing.py -" in log_text
+    assert "- run - INFO - hello from a" in log_text
 
     log.info("process finished")
