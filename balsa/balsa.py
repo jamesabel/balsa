@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 import traceback
 import sys
-from typing import List
+from typing import List, Union
 from pathlib import Path
 
 import sentry_sdk
@@ -80,12 +80,12 @@ class Balsa(object):
     gui = attrib(default=False, type=bool)
     delete_existing_log_files = attrib(default=False, type=bool)
 
-    max_bytes = attrib(default=100 * 1e6, type=int)
+    max_bytes = attrib(default=100 * 1e6, type=float)
     backup_count = attrib(default=3, type=int)
     error_callback = attrib(default=None)
     max_string_list_entries = attrib(default=100, type=int)
 
-    log_directory = attrib(default=None, type=(Path, str))
+    log_directory = attrib(default=None)  # type: Union[Path, str]
     log_path = attrib(default=None, type=Path)
     log_extension = attrib(default=".log")
     log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
