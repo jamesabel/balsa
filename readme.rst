@@ -27,6 +27,7 @@ Major Features
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, MacOS).  Pure Python.
+- Multiprocessing support.
 
 Simple Example
 ==============
@@ -50,7 +51,7 @@ This will yield output of this form:
 
 .. code-block:: console
 
-    2021-10-24T10:49:04.150790-07:00 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
+    2022-02-27T13:51:49.247979-08:00 - example - MainProcess - balsa_simple_example.py - 12 - main - ERROR - my error example
 
 Releases
 ========
