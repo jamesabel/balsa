@@ -332,7 +332,7 @@ def balsa_clone(original_dict: Dict[str, Any], instance_name: str) -> Balsa:
     :return: a Balsa instance
     """
 
-    new_dict["instance_name"] = instance_name
-    new_dict["delete_existing_log_files"] = False
+    original_dict["instance_name"] = instance_name
+    original_dict["delete_existing_log_files"] = False
     new_balsa = attr.evolve(Balsa(), **original_dict)  # deletion of existing log files is only possible by the original Balsa instance
     return new_balsa
