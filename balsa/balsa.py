@@ -4,15 +4,16 @@ import logging
 import logging.handlers
 import traceback
 import sys
-from typing import List, Union
+from typing import List, Union, Dict, Any
 from pathlib import Path
 
+import attr
 import sentry_sdk
 
 from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, BalsaFormatter
 
 import appdirs
-from attr import attrs, attrib, evolve
+from attr import attrs, attrib
 
 # args
 verbose_arg_string = "verbose"
@@ -88,7 +89,7 @@ class Balsa(object):
     log_directory = attrib(default=None)  # type: Union[Path, str]
     log_path = attrib(default=None, type=Path)
     log_extension = attrib(default=".log")
-    log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
+    log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(processName)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
     log_console_prefix = attrib(default="")  # set to "\r" (rewrite existing line) or "\n" (new line) to avoid logs appended to current line
 
     handlers = attrib(default=None)
@@ -189,9 +190,9 @@ class Balsa(object):
                             pass
 
                 if self.instance_name is None:
-                    file_name = "{self.name}{self.log_extension}"
+                    file_name = f"{self.name}{self.log_extension}"
                 else:
-                    file_name = "{self.name}_{self.instance_name}{self.log_extension}"
+                    file_name = f"{self.name}_{self.instance_name}{self.log_extension}"
                 self.log_path = Path(self.log_directory, file_name)
 
                 file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
@@ -310,13 +311,28 @@ class Balsa(object):
         """
         return self.handlers[HandlerType.StringList].strings
 
-    def evolve(self, instance_name: str):
+    def config_as_dict(self) -> Dict[str, Any]:
         """
-        Create another instance of this Balsa and modify it with a given instance name. This is particularly useful for multiprocessing.
-        :param instance_name: unique name of the new instance
-        :return: a Balsa instance
+        Get the Balsa configuration as a dict. Useful for passing to balsa_clone().
+        :return: dict of Balsa configuration
         """
+        config = {}
+        config_types = [bool, str, Path, int, float]  # only pickle-able types
+        for k, v in attr.asdict(self).items():
+            if any([isinstance(v, config_type) for config_type in config_types]):
+                config[k] = v
+        return config
 
-        # deletion of existing log files is only possible by the original Balsa instance
-        new_balsa = evolve(self, instance_name=instance_name, delete_existing_log_files=False)
-        return new_balsa
+
+def balsa_clone(original_dict: Dict[str, Any], instance_name: str) -> Balsa:
+    """
+    Create another instance of this Balsa and modify it with a given instance name. This is particularly useful for multiprocessing.
+    :param original_dict: dict of the Balsa instance from
+    :param instance_name: unique name of the new instance
+    :return: a Balsa instance
+    """
+
+    new_dict["instance_name"] = instance_name
+    new_dict["delete_existing_log_files"] = False
+    new_balsa = attr.evolve(Balsa(), **original_dict)  # deletion of existing log files is only possible by the original Balsa instance
+    return new_balsa
