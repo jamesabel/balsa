@@ -1,4 +1,6 @@
 del /Q venv
-python.exe -m venv --clear venv
-venv\Scripts\python.exe -m pip install --upgrade pip
-venv\Scripts\pip.exe install -U balsa
+"C:\Program Files\Python310\python.exe" -m venv --clear venv
+call venv\Scripts\activate.bat 
+python -m pip install --upgrade pip
+python -m pip install -U balsa
+call deactivate
