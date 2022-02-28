@@ -27,6 +27,7 @@ Major Features
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, MacOS).  Pure Python.
+- Multiprocessing support.
 
 Simple Example
 ==============
