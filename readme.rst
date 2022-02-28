@@ -53,13 +53,6 @@ This will yield output of this form:
 
     2022-02-27T17:57:16.327928-08:00 - example - MainProcess - balsa_simple_example.py - 12 - main - ERROR - my error example
 
-Releases
-========
-- 0.9 : Add structured logging and ISO 8601 timestamp format.
-- 0.6 : Add rate control to popup windows. Automated GUI testing.
-- 0.5 : Allow more than one logger.
-- 0.3 : Initial release.
-
 Where did the name come from?
 =============================
 Balsa lumber is very soft and light, with a coarse, open grain.
