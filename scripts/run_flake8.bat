@@ -1,6 +1,6 @@
 pushd .
 cd ..
-del doc\flake8_report.txt
+del docs\flake8_report.txt
 call venv\Scripts\activate.bat
 REM
 REM E402 module level import not at top of file
