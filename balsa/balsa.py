@@ -12,6 +12,7 @@ import attr
 
 try:
     import sentry_sdk
+    import sentry_sdk.utils
 except ImportError:
     pass
 
@@ -114,8 +115,9 @@ class Balsa(object):
     use_sentry_sqlalchemy = attrib(default=False, type=bool)
     use_sentry_celery = attrib(default=False, type=bool)
 
-    sentry_client = attrib(default=None)
     sentry_dsn = attrib(default=None, type=str)
+    # As of this writing Sentry's default is 512, but if we log a stack trace it tends to get truncated. Set to None to use the default from Sentry.
+    sentry_max_string_len = attrib(default=8 * 1024)  # type: Union[int, None]
 
     instance_name = attrib(default=None, type=str)
 
@@ -243,6 +245,10 @@ class Balsa(object):
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
+
+            if self.sentry_max_string_len is not None:
+                sentry_sdk.utils.MAX_STRING_LENGTH = self.sentry_max_string_len
+
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
             integrations = []
             if self.use_sentry_django:
