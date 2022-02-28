@@ -188,6 +188,7 @@ class Balsa(object):
 
                 self.log_directory.mkdir(parents=True, exist_ok=True)
                 if self.delete_existing_log_files:
+                    # need to glob since there are potentially many files due to the "rotating" file handler
                     for file_path in Path.glob(self.log_directory, f"*{self.log_extension}"):
                         try:
                             file_path.unlink()
@@ -328,17 +329,33 @@ class Balsa(object):
                 config[k] = v
         return config
 
+    def remove(self):
+        """
+        remove all file handlers, essentially stopping all logging that's been configured by this instance
+        """
+        if self.log is not None:
+            self.log.handlers.clear()  # removeHandler() doesn't work
 
-def balsa_clone(config_dict: Dict[str, Any], instance_name: str) -> Balsa:
+
+def balsa_clone(config_dict: Dict[str, Any], instance_name: str, parent_instance: Balsa = None) -> Balsa:
     """
-    Create another Balsa instance from a config dict and modify it with a given instance name. This is particularly useful for multiprocessing.
+    Create another Balsa instance from a config dict and modify it with a given instance name. Note that init_logger() must still be called.
+
+    This is particularly useful for multiprocessing since the new Process's logging subsystem is separate from the main process. The config dict is passed to the
+    Process (since the config dict can be pickled) and that process can instantiate its own logger with this config. This should be done in the run() function (not in __init__() ).
+
     :param config_dict: config dict from the "parent" Balsa instance
     :param instance_name: unique name of the new instance
+    :param parent_instance: Balsa instance (or instance of a Balsa derived class) to use to clone from. If not given, the base Balsa class itself is used.
     :return: a Balsa instance
     """
 
-    config_dict = deepcopy(config_dict)
+    if parent_instance is None:
+        balsa_instance = Balsa()
+    else:
+        balsa_instance = parent_instance
+    config_dict = deepcopy(config_dict)  # so we don't modify the caller's dict
     config_dict["instance_name"] = instance_name
-    config_dict["delete_existing_log_files"] = False  # deletion of existing log files is only possible by the original Balsa instance
-    new_balsa = attr.evolve(Balsa(), **config_dict)
+    config_dict["delete_existing_log_files"] = False  # deletion of existing log files is only possible by the original Balsa instance since all files in the directory are removed
+    new_balsa = attr.evolve(balsa_instance, **config_dict)
     return new_balsa
