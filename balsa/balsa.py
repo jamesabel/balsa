@@ -267,11 +267,11 @@ class Balsa(object):
                 integrations.append(CeleryIntegration())
 
             if self.sentry_dsn is None:
-                if "SENTRY_DSN" not in os.environ:
-                    raise ValueError("Missing sentry_dsn")
+                if (sentry_dsn := self.get_sentry_dsn_via_env_var()) is None:
+                    raise ValueError("Missing Sentry DSN - either set as an environmental variable or a parameter to the Balsa constructor")
                 else:
                     sentry_sdk.init(
-                        dsn=os.environ["SENTRY_DSN"],
+                        dsn=sentry_dsn,
                         sample_rate=sample_rate,
                         integrations=integrations,
                     )
@@ -289,6 +289,13 @@ class Balsa(object):
             error_callback_handler.setLevel(logging.ERROR)
             self.log.addHandler(error_callback_handler)
             self.handlers[HandlerType.Callback] = error_callback_handler
+
+    def get_sentry_dsn_via_env_var(self) -> Union[str, None]:
+        """
+        Get the Sentry DSN via an environmental variable. Derived classes should override this to use a different environmental variable.
+        :return: Sentry DSN or None if environmental variable not set
+        """
+        return os.environ.get("SENTRY_DSN")
 
     def set_std(self):
         """
