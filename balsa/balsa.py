@@ -6,6 +6,7 @@ import traceback
 import sys
 from typing import List, Union, Dict, Any
 from pathlib import Path
+from copy import deepcopy
 
 import attr
 
@@ -328,15 +329,16 @@ class Balsa(object):
         return config
 
 
-def balsa_clone(original_dict: Dict[str, Any], instance_name: str) -> Balsa:
+def balsa_clone(config_dict: Dict[str, Any], instance_name: str) -> Balsa:
     """
-    Create another instance of this Balsa and modify it with a given instance name. This is particularly useful for multiprocessing.
-    :param original_dict: dict of the Balsa instance from
+    Create another Balsa instance from a config dict and modify it with a given instance name. This is particularly useful for multiprocessing.
+    :param config_dict: config dict from the "parent" Balsa instance
     :param instance_name: unique name of the new instance
     :return: a Balsa instance
     """
 
-    original_dict["instance_name"] = instance_name
-    original_dict["delete_existing_log_files"] = False
-    new_balsa = attr.evolve(Balsa(), **original_dict)  # deletion of existing log files is only possible by the original Balsa instance
+    config_dict = deepcopy(config_dict)
+    config_dict["instance_name"] = instance_name
+    config_dict["delete_existing_log_files"] = False  # deletion of existing log files is only possible by the original Balsa instance
+    new_balsa = attr.evolve(Balsa(), **config_dict)
     return new_balsa
