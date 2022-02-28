@@ -8,4 +8,3 @@ __author__ = "James Abel"
 __author_email__ = "j@abel.co"
 __license__ = "MIT"
 __copyright__ = "Copyright 2018-2022 James Abel"
-
