@@ -8,7 +8,11 @@ from typing import List, Union, Dict, Any
 from pathlib import Path
 
 import attr
-import sentry_sdk
+
+try:
+    import sentry_sdk
+except ImportError:
+    pass
 
 from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, BalsaFormatter
 
