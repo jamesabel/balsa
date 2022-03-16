@@ -16,7 +16,7 @@ try:
 except ImportError:
     pass
 
-from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, BalsaFormatter
+from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, BalsaFormatter, __application_name__
 
 import appdirs
 from attr import attrs, attrib
@@ -42,6 +42,9 @@ def get_logger(name):
             name = name.split(os.sep)[-1]
 
     return logging.getLogger(name)
+
+
+log = get_logger(__application_name__)
 
 
 def traceback_string():
@@ -296,6 +299,8 @@ class Balsa(object):
             self.log.addHandler(error_callback_handler)
             self.handlers[HandlerType.Callback] = error_callback_handler
 
+        _set_global_balsa(self)
+
     def get_sentry_dsn_via_env_var(self) -> Union[str, None]:
         """
         Get the Sentry DSN via an environmental variable. Derived classes should override this to use a different environmental variable.
@@ -372,3 +377,35 @@ def balsa_clone(config_dict: Dict[str, Any], instance_name: str, parent_instance
     config_dict["delete_existing_log_files"] = False  # deletion of existing log files is only possible by the original Balsa instance since all files in the directory are removed
     new_balsa = attr.evolve(balsa_instance, **config_dict)
     return new_balsa
+
+
+# will be set when Balsa initialized
+_g_balsa = None  # type: Union[Balsa, None]
+
+
+def _set_global_balsa(balsa: Balsa):
+    """
+    Set the global balsa instance.  Automatically called in Balsa.init_logger().
+    :param balsa: Balsa instance
+    """
+    global _g_balsa
+    _g_balsa = balsa
+
+
+def get_global_balsa() -> Balsa:
+    """
+    Get the global Balsa.
+    :return: global Balsa instance
+    """
+    if _g_balsa is None:
+        raise RuntimeError("Balsa not yet initialized")
+    return _g_balsa
+
+
+def get_global_config() -> Dict[str, Any]:
+    """
+    Get the global Balsa configuration for this process.
+    :return: dict with Balsa config
+    """
+    global_balsa = get_global_balsa()
+    return global_balsa.config_as_dict()
