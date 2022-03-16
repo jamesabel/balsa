@@ -39,7 +39,7 @@ try:
     def test_threaded_gui():
 
         global exception_complete
-        timeout = 10
+        timeout = 100
 
         application_name = "main_thread"
         log = get_logger(application_name)
