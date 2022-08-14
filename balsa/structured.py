@@ -8,9 +8,11 @@ import json
 
 import dateutil.parser
 
-from balsa import get_logger, __application_name__
+from logging import getLogger
 
-log = get_logger(__application_name__)
+from balsa.__version__ import __application_name__
+
+log = getLogger(__application_name__)
 
 
 def convert_serializable_special_cases(o):
