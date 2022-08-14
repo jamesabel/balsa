@@ -27,6 +27,8 @@ Major Features
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, MacOS).  Pure Python.
+- Multiprocessing support.
+- AWS CloudWatch logs support.
 
 Simple Example
 ==============
@@ -51,13 +53,6 @@ This will yield output of this form:
 .. code-block:: console
 
     2021-10-24T10:49:04.150790-07:00 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
-
-Releases
-========
-- 0.9 : Add structured logging and ISO 8601 timestamp format.
-- 0.6 : Add rate control to popup windows. Automated GUI testing.
-- 0.5 : Allow more than one logger.
-- 0.3 : Initial release.
 
 Where did the name come from?
 =============================

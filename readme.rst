@@ -28,6 +28,7 @@ Major Features
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, MacOS).  Pure Python.
 - Multiprocessing support.
+- AWS CloudWatch logs support.
 
 Simple Example
 ==============
@@ -51,7 +52,7 @@ This will yield output of this form:
 
 .. code-block:: console
 
-    2022-02-27T17:57:16.327928-08:00 - example - MainProcess - balsa_simple_example.py - 12 - main - ERROR - my error example
+    2021-10-24T10:49:04.150790-07:00 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
 
 Where did the name come from?
 =============================
