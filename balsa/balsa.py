@@ -16,7 +16,12 @@ try:
 except ImportError:
     pass
 
-from balsa import HandlerType, BalsaNullHandler, DialogBoxHandler, BalsaStringListHandler, BalsaFormatter, __application_name__
+from balsa.get_logger import get_logger
+from balsa.handlers import HandlerType, BalsaNullHandler, BalsaStringListHandler
+from balsa.guihandler import DialogBoxHandler
+from balsa.formatter import BalsaFormatter
+from balsa.__version__ import __application_name__
+from balsa.aws_cloudwatch_logs import AWSCloudWatchLogHandler
 
 import appdirs
 from attr import attrs, attrib
@@ -25,23 +30,6 @@ from attr import attrs, attrib
 verbose_arg_string = "verbose"
 log_dir_arg_string = "logdir"
 delete_existing_arg_string = "dellog"
-
-
-def get_logger(name):
-    """
-    Special get_logger.  Typically, name is the name of the application using Balsa.
-    :param name: name of the logger to get, which is usually the application name. Optionally it can be a python file
-    name or path (e.g. __file__).
-    :return: the logger for the logger name
-    """
-
-    # if name is a python file, or a path to a python file, extract the module name
-    if name.endswith(".py"):
-        name = name[:-3]
-        if os.sep in name:
-            name = name.split(os.sep)[-1]
-
-    return logging.getLogger(name)
 
 
 log = get_logger(__application_name__)
@@ -121,6 +109,10 @@ class Balsa(object):
     sentry_dsn = attrib(default=None, type=str)
     # As of this writing Sentry's default is 512, but if we log a stack trace it tends to get truncated. Set to None to use the default from Sentry.
     sentry_max_string_len = attrib(default=8 * 1024)  # type: Union[int, None]
+
+    # AWS CloudWatch logs
+    use_aws_cloudwatch_logs = attrib(default=False, type=bool)
+    aws_credentials = attrib(default=dict(), type=dict)  # kwargs that will get sent to boto3 (via AWSimple)
 
     instance_name = attrib(default=None, type=str)
 
@@ -290,6 +282,13 @@ class Balsa(object):
                     sample_rate=sample_rate,
                     integrations=integrations,
                 )
+
+        if self.use_aws_cloudwatch_logs:
+            aws_cloudwatch_log_handler = AWSCloudWatchLogHandler(self.name, **self.aws_credentials)
+            aws_cloudwatch_log_handler.setFormatter(log_formatter)
+            aws_cloudwatch_log_handler.setLevel(logging.WARNING)
+            self.log.addHandler(aws_cloudwatch_log_handler)
+            self.handlers[HandlerType.AWSCloudWatch] = aws_cloudwatch_log_handler
 
         # error handler for callback on error or above
         # (this is last since the user may do a sys.exit() in the error callback)

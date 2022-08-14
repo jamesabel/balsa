@@ -1,9 +1,12 @@
 appdirs
 attrs
 mttkinter
+python-dateutil
+#
+# cloud services
 sentry-sdk
 sentry-sdk[flask]
-python-dateutil
+awsimple
 #
 # dev only
 sphinx
@@ -14,6 +17,7 @@ pytest
 coverage
 pytest-cov
 pytest-pycharm
+moto
 ismain
 PyQt5
 PyQt5-stubs

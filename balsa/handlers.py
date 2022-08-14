@@ -9,6 +9,7 @@ class HandlerType(Enum):
     Callback = 4
     Sentry = 5
     StringList = 6
+    AWSCloudWatch = 7
 
 
 class BalsaNullHandler(logging.NullHandler):
