@@ -9,6 +9,12 @@ try:
 
     awsimple_exists = True
 
+except ImportError:
+
+    awsimple_exists = False
+
+if awsimple_exists:
+
     class AWSCloudWatchLogHandler(logging.NullHandler):
         """
         Send logs to AWS CloudWatch logs.
@@ -28,11 +34,11 @@ try:
             noci_cloud_log_access = LogsAccess(self.log_group)
             noci_cloud_log_access.put(message)
 
-except ImportError:
+else:
 
-    awsimple_exists = False
+    # mypy will complain that AWSCloudWatchLogHandler is already defined ...
 
-    class AWSCloudWatchLogHandler(logging.NullHandler):
+    class AWSCloudWatchLogHandler(logging.NullHandler):  # type: ignore
         # dummy so we don't get an import error
         def __init__(self, log_group: str):
             log.error("AWS CloudWatch enabled but awsimple not installed")
