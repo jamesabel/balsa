@@ -1,86 +1,19 @@
-import decimal
+
 from datetime import datetime
-from decimal import Decimal
-from enum import Enum
 import re
 import logging
 import json
-
-import dateutil.parser
-
 from logging import getLogger
+
+from yasf import structured_sentinel
+import dateutil.parser
 
 from balsa.__version__ import __application_name__
 
 log = getLogger(__application_name__)
 
 
-def convert_serializable_special_cases(o):
-    """
-    Convert an object to a type that is fairly generally serializable (e.g. json serializable).
-    This only handles the cases that need converting.  The json module handles all the rest.
-    For JSON, with json.dump or json.dumps with argument default=convert_serializable.
-    Example:
-    json.dumps(my_animal, indent=4, default=convert_serializable)
-    :param o: object to be converted to a type that is serializable
-    :return: a serializable representation
-    """
-
-    if isinstance(o, Enum):
-        serializable_representation = o.name
-    elif isinstance(o, Decimal):
-        try:
-            is_int = o % 1 == 0  # doesn't work for numbers greater than decimal.MAX_EMAX
-        except decimal.InvalidOperation:
-            is_int = False  # numbers larger than decimal.MAX_EMAX will get a decimal.DivisionImpossible, so we'll just have to represent those as a float
-
-        if is_int:
-            # if representable with an integer, use an integer
-            serializable_representation = int(o)
-        else:
-            # not representable with an integer so use a float
-            serializable_representation = float(o)
-    elif isinstance(o, bytes) or isinstance(o, bytearray):
-        serializable_representation = str(o)
-    elif hasattr(o, "value"):
-        serializable_representation = str(o.value)
-    else:
-        serializable_representation = str(o)
-        # raise NotImplementedError(f"can not serialize {o} since type={type(o)}")
-    return serializable_representation
-
-
-structured_sentinel = "<>"  # illegal JSON
-
-
-def sf(*args, **kwargs):
-    """
-    Structured formatter helper function. When called with any number of positional or keyword arguments, creates a structured string representing those arguments.
-    This is a short function name (sf) since it usually goes inside a logging call.
-
-    Example code:
-    question = "life"
-    answer = 42
-    log.info(sf("test structured logging", question=question, answer=answer))
-
-    log:
-    2021-10-24T10:38:54.524721-07:00 - test_structured_logging - test_structured_logging.py - 16 - test_to_structured_logging - INFO - test structured logging <> {"question": "life", "answer": 42} <>
-
-    :param args: args
-    :param kwargs: kwargs
-    """
-
-    separator = ","
-    output_list = []
-    if len(args) > 0:
-        output_list.append(separator.join(args))
-    if len(kwargs) > 0:
-        # use json.dumps to handle special strings (e.g. embedded quotes)
-        output_list.extend([structured_sentinel, json.dumps(kwargs, default=convert_serializable_special_cases), structured_sentinel])
-    return " ".join(output_list)
-
-
-balsa_log_regex = re.compile(r"([0-9\-:T.]+) - ([\S]+) - ([\S]+) - ([0-9]+) - ([\S]+) - (NOTSET|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL) - (.*)", flags=re.IGNORECASE | re.DOTALL)
+balsa_log_regex = re.compile(r"([0-9\-:T.]+) - (\S+) - (\S+) - ([0-9]+) - (\S+) - (NOTSET|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL) - (.*)", flags=re.IGNORECASE | re.DOTALL)
 
 
 class BalsaRecord:

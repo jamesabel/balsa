@@ -2,6 +2,7 @@ appdirs
 attrs
 mttkinter
 python-dateutil
+yasf
 #
 # cloud services
 sentry-sdk

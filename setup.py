@@ -23,6 +23,6 @@ setup(
     keywords=["logging", "utility"],
     packages=[__title__],
     package_data={__title__: [readme_file_path, "py.typed"]},
-    install_requires=["appdirs", "attrs", "mttkinter", "python-dateutil"],
+    install_requires=["appdirs", "attrs", "mttkinter", "python-dateutil", "yasf"],
     classifiers=[],
 )
