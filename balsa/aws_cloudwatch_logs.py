@@ -6,6 +6,7 @@ try:
     # user may or may not use AWS CloudWatch logs
 
     from awsimple import LogsAccess
+
     awsimple_exists = True
 
     class AWSCloudWatchLogHandler(logging.NullHandler):
