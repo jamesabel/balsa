@@ -1,6 +1,23 @@
 import logging
+import json
+from functools import lru_cache
+import getpass
+import platform
+
+from yasf import sf_separate
 
 log = logging.getLogger(__name__)
+
+
+@lru_cache()
+def get_user_name() -> str:
+    return getpass.getuser()
+
+
+@lru_cache()
+def get_computer_name() -> str:
+    return platform.node()
+
 
 try:
     # user may or may not use AWS CloudWatch logs
@@ -30,9 +47,26 @@ if awsimple_exists:
             super().__init__(**kwargs)
 
         def handle(self, record):
-            message = self.format(record)
+            args_json, kwargs_json = sf_separate(record.message)
+            if kwargs_json is None:
+                put_dict = {}
+            else:
+                put_dict = json.loads(kwargs_json)
+            if args_json is not None and len(args_json) > 0:
+                put_dict["message"] = args_json
+
+            for attribute in ["created", "filename", "funcName", "levelname", "lineno", "module", "name", "pathname", "process", "thread", "threadName", "processName"]:
+                if attribute in put_dict:
+                    attribute = f"_{attribute}"
+                put_dict[attribute] = getattr(record, attribute)
+
+            put_dict["system_user_name"] = get_user_name()
+            put_dict["system_computer_name"] = get_computer_name()
+
+            put_string = json.dumps(put_dict)
+
             noci_cloud_log_access = LogsAccess(self.log_group)
-            noci_cloud_log_access.put(message)
+            noci_cloud_log_access.put(put_string)
 
 else:
 

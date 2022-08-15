@@ -1,5 +1,6 @@
 from ismain import is_main
 
+from yasf import sf
 from balsa import get_logger, Balsa, __author__
 
 
@@ -16,6 +17,8 @@ def test_balsa_aws_cloudwatch_logs():
 
     log = get_logger(application_name)
     log.warning("test error message")
+    log.warning(sf(is_mock=is_mock(), issue="something went wrong"))
+    log.warning(sf("another message", is_mock=is_mock(), issue="something really went wrong"))
 
 
 if is_main():
