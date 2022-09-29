@@ -249,10 +249,7 @@ class Balsa(object):
 
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
 
-            sentry_logging = SentryLoggingIntegration(
-                level=self.sentry_breadcrumb_level,  # Capture info and above as breadcrumbs
-                event_level=self.sentry_event_level  # Send errors as events
-            )
+            sentry_logging = SentryLoggingIntegration(level=self.sentry_breadcrumb_level, event_level=self.sentry_event_level)
 
             integrations = [sentry_logging]
             if self.use_sentry_django:
