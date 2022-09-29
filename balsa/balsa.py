@@ -13,6 +13,7 @@ import attr
 try:
     import sentry_sdk
     import sentry_sdk.utils
+    from sentry_sdk.integrations.logging import LoggingIntegration as SentryLoggingIntegration
 except ImportError:
     pass
 
@@ -109,6 +110,8 @@ class Balsa(object):
     sentry_dsn = attrib(default=None, type=str)
     # As of this writing Sentry's default is 512, but if we log a stack trace it tends to get truncated. Set to None to use the default from Sentry.
     sentry_max_string_len = attrib(default=8 * 1024)  # type: Union[int, None]
+    sentry_breadcrumb_level = logging.INFO  # the Sentry default level (AKA breadcrumb level) is also INFO
+    sentry_event_level = logging.ERROR  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
 
     # AWS CloudWatch logs
     use_aws_cloudwatch_logs = attrib(default=False, type=bool)
@@ -245,7 +248,13 @@ class Balsa(object):
                 sentry_sdk.utils.MAX_STRING_LENGTH = self.sentry_max_string_len
 
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
-            integrations = []
+
+            sentry_logging = SentryLoggingIntegration(
+                level=self.sentry_breadcrumb_level,  # Capture info and above as breadcrumbs
+                event_level=self.sentry_event_level  # Send errors as events
+            )
+
+            integrations = [sentry_logging]
             if self.use_sentry_django:
                 from sentry_sdk.integrations.django import DjangoIntegration
 
