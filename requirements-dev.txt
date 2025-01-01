@@ -26,6 +26,7 @@ twine
 flake8
 mypy
 types-python-dateutil
+python-dotenv
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'
