@@ -19,7 +19,7 @@ class TstBalsa(Balsa):
     def __init__(self, name: str, gui: bool, is_root: bool, rate_limits: dict | None):
         if rate_limits is None:
             rate_limits = default_rate_limits
-        super().__init__(name, __author__, gui=gui, is_root=is_root, rate_limits=rate_limits, log_directory=Path("log", name), delete_existing_log_files=True)
+        super().__init__(name, __author__, gui=gui, is_root=is_root, rate_limits=rate_limits, log_directory=Path("log", name), verbose=True, delete_existing_log_files=True)
 
 
 class TstCLIBalsa(TstBalsa):
