@@ -1,8 +1,11 @@
 import pytest
 
-from balsa import Balsa, get_global_balsa, get_global_config, __author__
+from balsa import get_global_balsa, get_global_config, __author__
+
+from .tst_balsa import TstGUIBalsa
 
 
+@pytest.mark.order(1)  # this test must always run first
 def test_global_balsa():
 
     with pytest.raises(RuntimeError):
@@ -13,7 +16,7 @@ def test_global_balsa():
         # not yet initialized
         get_global_config()
 
-    balsa = Balsa("test_global_balsa", __author__, is_root=False)
+    balsa = TstGUIBalsa("test_global_balsa")
     balsa.init_logger()
 
     global_balsa = get_global_balsa()
@@ -22,3 +25,5 @@ def test_global_balsa():
     global_config = get_global_config()
     assert global_config is not None
     assert global_config["author"] == __author__
+
+    balsa.remove()

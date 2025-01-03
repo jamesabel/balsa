@@ -1,8 +1,9 @@
 appdirs
 attrs
-mttkinter
 python-dateutil
 yasf
+mttkinter
+tobool
 #
 # cloud services
 sentry-sdk
@@ -12,21 +13,35 @@ awsimple
 # dev only
 sphinx
 semantic_version
-wheel
-black
-pytest
-coverage
-pytest-cov
 pytest-pycharm
 moto
 ismain
-PyQt5
-PyQt5-stubs
-twine
-flake8
-mypy
 types-python-dateutil
 python-dotenv
+#
+# libraries that can potentially interfere with GUI logging
+PyQt5
+PyQt5-stubs
+PySide6
+matplotlib
+#
+# packaging
+twine
+wheel
+#
+# linters/formatters
+flake8
+mypy
+black
+#
+# testing
+#
+pytest
+coverage
+pytest-cov
+pytest-randomly
+pytest-order
+pywin32; sys_platform == 'win32'
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'

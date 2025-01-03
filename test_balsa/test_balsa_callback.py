@@ -1,6 +1,10 @@
-from balsa import get_logger, Balsa, __author__
+from pathlib import Path
+
+from balsa import get_logger
 
 log = get_logger(__file__)
+
+from .tst_balsa import TstCLIBalsa
 
 
 def my_callback(log_record):
@@ -10,10 +14,15 @@ def my_callback(log_record):
 def test_balsa_callback():
     application_name = "test_balsa_callback"
 
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory="temp", error_callback=my_callback, is_root=False)
+    balsa = TstCLIBalsa(application_name)
+    balsa.log_directory = Path("temp", application_name)
+    balsa.error_callback = my_callback
+    balsa.delete_existing_log_files = True
     balsa.init_logger()
 
-    log.error("test error message")
+    log.error(f"{application_name}\ntest error message")
+
+    balsa.remove()
 
 
 if __name__ == "__main__":

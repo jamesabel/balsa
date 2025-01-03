@@ -1,29 +1,20 @@
-import time
 import threading
-import logging
-
-import pyautogui
-
-from balsa import get_logger, Balsa, __author__, traceback_string
-from test_balsa import enter_press_time
 
 
-def press_enter():
-    for _ in range(0, 2):
-        time.sleep(enter_press_time)
-        pyautogui.press("enter")
+from balsa import get_logger, traceback_string
+
+from .tst_balsa import press_enter, TstGUIBalsa
 
 
 def test_balsa_exception():
     application_name = "test_balsa_exception"
 
-    balsa = Balsa(application_name, __author__, gui=True, is_root=False)
-    balsa.rate_limits[logging.ERROR]["count"] = 4  # we have 3 messages
+    balsa = TstGUIBalsa(application_name)
     balsa.init_logger()
 
     log = get_logger(application_name)
 
-    press_enter_thread = threading.Thread(target=press_enter)
+    press_enter_thread = threading.Thread(target=press_enter, args=(2,))
     press_enter_thread.start()
 
     try:
@@ -33,6 +24,8 @@ def test_balsa_exception():
         log.error(traceback_string())
 
     press_enter_thread.join()
+
+    balsa.remove()
 
 
 if __name__ == "__main__":

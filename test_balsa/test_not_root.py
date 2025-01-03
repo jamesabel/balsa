@@ -1,13 +1,13 @@
 import logging
 
-from balsa import Balsa, __author__
+from .tst_balsa import TstCLIBalsa
 
 
 def test_not_root():
     """
     test that a non-root log does not pick up the logging to another logger
     """
-    balsa = Balsa("a", __author__, verbose=True, is_root=False)
+    balsa = TstCLIBalsa("a")
     balsa.init_logger()
 
     some_other_logger = logging.getLogger("b")

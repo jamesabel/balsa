@@ -1,6 +1,5 @@
 pushd .
 cd ..
-del docs\flake8_report.txt
 call venv\Scripts\activate.bat
 REM
 REM E402 module level import not at top of file
@@ -8,6 +7,6 @@ REM F401 imported but unused
 REM W503 line break before binary operator (black puts this in)
 REM E203 whitespace before ':' (black puts this in and may be controversial)
 REM E501 line too long
-flake8 --output-file docs\flake8_report.txt --ignore=E402,F401,W503,E203,E501 --tee balsa
+flake8 --ignore=E402,F401,W503,E203,E501 balsa test_balsa
 call deactivate
 popd
