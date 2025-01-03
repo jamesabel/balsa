@@ -26,7 +26,7 @@ class MyProcess(Process):
 
 def test_multiprocessing():
 
-    log_directory = Path("temp", application_name)
+    log_directory = Path("log", application_name)
 
     balsa = TstCLIBalsa(application_name)
     balsa.init_logger()
@@ -48,3 +48,5 @@ def test_multiprocessing():
     assert "- run - INFO - hello from a" in log_text
 
     log.info("process finished")
+
+    balsa.remove()
