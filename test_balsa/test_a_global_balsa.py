@@ -5,6 +5,7 @@ from balsa import get_global_balsa, get_global_config, __author__
 from .tst_balsa import TstGUIBalsa
 
 
+@pytest.mark.order(1)  # this test must always run first
 def test_global_balsa():
 
     with pytest.raises(RuntimeError):
