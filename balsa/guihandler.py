@@ -1,14 +1,17 @@
 import time
 import logging
-from pathlib import Path
-from datetime import datetime
+import os
+
+from tobool import to_bool_strict
+
+from . import __application_name__
 
 tkinter_present = False
+use_mttkinter = to_bool_strict(os.environ.get(f"{__application_name__}_USE_MTTKINTER", True))  # in case the user doesn't want to use mttkinter (multi-threaded tkinter)
 
-# multi-threaded tkinter
 try:
-    # in case the user doesn't want to use mttkinter
-    import mttkinter as tkinter
+    if use_mttkinter:
+        import mttkinter as tkinter
 except ModuleNotFoundError:
     pass
 
@@ -28,6 +31,12 @@ def init_tkinter() -> tkinter.Tk | None:
         # make sure popup window has focus
         tk.wm_attributes("-topmost", 1)
         tk.focus_force()
+
+        if use_mttkinter:
+            # check that if we're using tkinter, mttkinter is installed
+            is_mttkinter = any("mttkinter" in d.lower() for d in dir(tk))
+            assert is_mttkinter, "mttkinter is not installed"
+
     else:
         tk = None
 
@@ -52,8 +61,6 @@ class DialogBoxHandler(logging.NullHandler):
         super().__init__()
 
     def handle(self, record):
-
-        Path("temp", "debug.txt").open("a").write(f"{datetime.now()}: {tkinter_present=},{record=}\n")
 
         now = time.time()
         if record.levelno in self.rate_limits:
