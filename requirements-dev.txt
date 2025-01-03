@@ -2,6 +2,8 @@ appdirs
 attrs
 python-dateutil
 yasf
+mttkinter
+tobool
 #
 # cloud services
 sentry-sdk
@@ -37,6 +39,9 @@ black
 pytest
 coverage
 pytest-cov
+pytest-randomly
+pytest-order
+pywin32; sys_platform == 'win32'
 #
 # pyautogui
 pyobjc-core; sys_platform == 'darwin'
