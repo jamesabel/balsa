@@ -19,6 +19,8 @@ def test_balsa_sentry():
 
         log = get_logger(application_name)
         log.error("test balsa sentry error message")
+
+        balsa.remove()
     else:
         print("Please set SENTRY_DSN environment variable to have a good %s test" % __name__)
 

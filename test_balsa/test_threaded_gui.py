@@ -1,13 +1,13 @@
 from threading import Thread
-import time
 from pathlib import Path
+import time
 
 import matplotlib
 import matplotlib.pyplot as plt
 
 matplotlib.use("TkAgg")  # ensure we can run with the TKAgg backend
 
-from balsa import get_logger, __author__, traceback_string
+from balsa import get_logger, traceback_string
 
 from .tst_balsa import TstGUIBalsa, press_enter
 
@@ -69,23 +69,27 @@ class GuiThreadB(Thread):
 def test_threaded_gui():
 
     global exception_a_complete, exception_b_complete
-    timeout = 10
+    timeout = 100.0
 
     plot(1)
 
-    application_name = "main_thread"
+    application_name = "test_threaded_gui"
     log = get_logger(application_name)
-    balsa = TstGUIBalsa(application_name, __author__)
+    balsa = TstGUIBalsa(application_name, is_root=True)
     balsa.init_logger()
-    log.info("starting main thread")
+    log.info(f"{application_name} - starting main thread")
 
     exception_a_complete = False
     gui_thread_a = GuiThreadA()
     gui_thread_a.start()
 
+    time.sleep(1.0)
+
     exception_b_complete = False
     gui_thread_b = GuiThreadB()
     gui_thread_b.start()
+
+    time.sleep(1.0)
 
     press_enter(2)  # press enter for each thread window
 

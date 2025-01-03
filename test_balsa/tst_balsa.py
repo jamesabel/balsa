@@ -3,8 +3,11 @@ import logging
 import time
 
 import pyautogui
+import pytest
 
 from balsa import Balsa, __author__
+
+from .popup_window import is_popup_dialog_with_ok
 
 # for testing, no rate limits unless explicitly set
 big_number = 1e6
@@ -32,6 +35,14 @@ class TstGUIBalsa(TstBalsa):
 
 
 def press_enter(n: int = 1, enter_press_time: float = 1.0):
+    found = False
+    count = 0
+    while not found and count < 10:
+        found = is_popup_dialog_with_ok()
+        time.sleep(1.0)
+        count += 1
+    if not found:
+        pytest.fail("press_enter: popup dialog not found")
     for i in range(n):
         time.sleep(enter_press_time)
         pyautogui.press("enter")

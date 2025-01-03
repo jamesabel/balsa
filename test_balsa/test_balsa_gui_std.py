@@ -7,7 +7,7 @@ def test_balsa_gui_std():
     application_name = "test_balsa_gui_std"
 
     # verbose to make the popup button happen
-    balsa = TstGUIBalsa(application_name)
+    balsa = TstGUIBalsa(application_name, is_root=True)
     balsa.init_logger()
 
     press_enter_thread = threading.Thread(target=press_enter)

@@ -3,7 +3,7 @@ from pathlib import Path
 import threading
 
 
-from balsa import get_logger, __author__
+from balsa import get_logger
 
 
 from .tst_balsa import TstGUIBalsa, press_enter
@@ -12,7 +12,7 @@ from .tst_balsa import TstGUIBalsa, press_enter
 def test_balsa_gui():
     application_name = "test_balsa_gui"
 
-    balsa = TstGUIBalsa(application_name, __author__)
+    balsa = TstGUIBalsa(application_name)
     balsa.log_directory = Path("temp", application_name)
     balsa.delete_existing_log_files = True
     balsa.verbose = True
@@ -22,7 +22,7 @@ def test_balsa_gui():
 
     press_enter_thread = threading.Thread(target=press_enter)
     press_enter_thread.start()
-    log.error("test error message")
+    log.error(f"{application_name} ... test error message")
     press_enter_thread.join()
 
     balsa.remove()

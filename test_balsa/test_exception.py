@@ -1,17 +1,15 @@
 import threading
-import logging
 
 
-from balsa import get_logger, Balsa, __author__, traceback_string
+from balsa import get_logger, traceback_string
 
-from .tst_balsa import press_enter
+from .tst_balsa import press_enter, TstGUIBalsa
 
 
 def test_balsa_exception():
     application_name = "test_balsa_exception"
 
-    balsa = Balsa(application_name, __author__, gui=True, is_root=False)
-    balsa.rate_limits[logging.ERROR]["count"] = 4  # we have 3 messages
+    balsa = TstGUIBalsa(application_name)
     balsa.init_logger()
 
     log = get_logger(application_name)
@@ -26,6 +24,8 @@ def test_balsa_exception():
         log.error(traceback_string())
 
     press_enter_thread.join()
+
+    balsa.remove()
 
 
 if __name__ == "__main__":

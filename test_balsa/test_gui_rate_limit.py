@@ -1,15 +1,15 @@
 import threading
 
 
-from balsa import get_logger, Balsa, __author__
+from balsa import get_logger, __author__
 
-from .tst_balsa import press_enter
+from .tst_balsa import TstGUIBalsa, press_enter
 
 
 def test_gui_rate_limit():
     application_name = "test_gui_rate_limit"
 
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory="temp", gui=True, is_root=False, delete_existing_log_files=True)
+    balsa = TstGUIBalsa(application_name, __author__)
     balsa.init_logger()
 
     log = get_logger(application_name)
@@ -20,6 +20,8 @@ def test_gui_rate_limit():
         log.warning(str(count))
 
     press_enter_thread.join()
+
+    balsa.remove()
 
 
 if __name__ == "__main__":

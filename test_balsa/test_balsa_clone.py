@@ -5,12 +5,7 @@ class CustomBalsa(Balsa):
     pass
 
 
-test_config = {
-    "name": "test_config",
-    "author": "me",
-    "verbose": False,
-    "gui": False,
-}
+test_config = {"name": "test_config", "author": "me", "verbose": False, "gui": False, "is_root": False}
 
 
 def test_balsa_clone_no_parent():
@@ -19,7 +14,7 @@ def test_balsa_clone_no_parent():
     balsa.init_logger()
     balsa.log.error("yes parent")
 
-    # balsa.remove()  # if this is not done the log.error() in the next function will be output twice
+    balsa.remove()
 
 
 def test_balsa_clone_parent():
