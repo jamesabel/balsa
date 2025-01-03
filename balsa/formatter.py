@@ -4,7 +4,6 @@ from logging import Formatter, LogRecord
 
 
 class BalsaFormatter(Formatter):
-
     """
     Format time in ISO 8601
     """
