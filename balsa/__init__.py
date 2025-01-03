@@ -4,7 +4,7 @@ from .__version__ import __author_email__, __author__, __copyright__, __descript
 from .get_logger import get_logger
 from .formatter import BalsaFormatter
 from .handlers import HandlerType, BalsaNullHandler, BalsaStringListHandler
-from .guihandler import DialogBoxHandler, tkinter_present, pyqt_present
+from .guihandler import DialogBoxHandler, tkinter_present
 from .balsa import Balsa, verbose_arg_string, delete_existing_arg_string, log_dir_arg_string, balsa_clone
 from .balsa import _set_global_balsa, get_global_balsa, get_global_config
 from .structured import BalsaRecord, balsa_log_regex
