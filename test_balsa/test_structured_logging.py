@@ -4,9 +4,10 @@ from balsa import __author__, Balsa, get_logger, sf
 
 
 def test_to_structured_logging():
+
     application_name = "test_structured_logging"
 
-    balsa = Balsa(application_name, __author__, verbose=True)
+    balsa = Balsa(application_name, __author__, verbose=True, is_root=False)
     balsa.init_logger()
 
     log = get_logger(application_name)

@@ -1,16 +1,9 @@
-import time
 import threading
 
-import pyautogui
 
 from balsa import get_logger, Balsa, __author__
-from test_balsa import enter_press_time
 
-
-def press_enter():
-    for _ in range(0, 3):
-        time.sleep(enter_press_time)
-        pyautogui.press("enter")
+from .tst_balsa import press_enter
 
 
 def test_gui_rate_limit():
@@ -21,7 +14,7 @@ def test_gui_rate_limit():
 
     log = get_logger(application_name)
 
-    press_enter_thread = threading.Thread(target=press_enter)
+    press_enter_thread = threading.Thread(target=press_enter, args=(3,))
     press_enter_thread.start()
     for count in range(0, 4):
         log.warning(str(count))

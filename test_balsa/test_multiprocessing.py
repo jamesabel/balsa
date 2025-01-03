@@ -2,9 +2,11 @@ from pathlib import Path
 from typing import Dict, Any
 from multiprocessing import Process
 
-from balsa import Balsa, __author__, get_logger, balsa_clone
+from balsa import __author__, get_logger, balsa_clone
 
 application_name = "test_balsa_multiprocess"
+
+from .tst_balsa import TstCLIBalsa
 
 
 class MyProcess(Process):
@@ -26,7 +28,7 @@ def test_multiprocessing():
 
     log_directory = Path("temp", application_name)
 
-    balsa = Balsa(application_name, __author__, verbose=True, log_directory=log_directory, delete_existing_log_files=True)
+    balsa = TstCLIBalsa(application_name)
     balsa.init_logger()
 
     log = get_logger(application_name)

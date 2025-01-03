@@ -1,17 +1,10 @@
-import time
 import threading
 import logging
 
-import pyautogui
 
 from balsa import get_logger, Balsa, __author__, traceback_string
-from test_balsa import enter_press_time
 
-
-def press_enter():
-    for _ in range(0, 2):
-        time.sleep(enter_press_time)
-        pyautogui.press("enter")
+from .tst_balsa import press_enter
 
 
 def test_balsa_exception():
@@ -23,7 +16,7 @@ def test_balsa_exception():
 
     log = get_logger(application_name)
 
-    press_enter_thread = threading.Thread(target=press_enter)
+    press_enter_thread = threading.Thread(target=press_enter, args=(2,))
     press_enter_thread.start()
 
     try:

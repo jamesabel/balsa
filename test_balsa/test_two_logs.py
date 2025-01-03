@@ -1,4 +1,6 @@
-from balsa import get_logger, Balsa, __author__
+from balsa import get_logger
+
+from .tst_balsa import TstCLIBalsa
 
 
 def test_two_logs():
@@ -10,7 +12,11 @@ def test_two_logs():
     # instantiate the balsa objects
     # The 'a' log is the root and therefore the catch-all
     # The 'b' log has no propagation and is therefore only its messages
-    balsas = {"a": Balsa("a", __author__, verbose=True), "b": Balsa("b", __author__, verbose=True, propagate=False, is_root=False)}
+    balsas = {}
+    balsas["a"] = TstCLIBalsa("a", is_root=True)
+    balsa_b = TstCLIBalsa("b")
+    balsa_b.propagate = False
+    balsas["b"] = TstCLIBalsa("b")
 
     [b.init_logger() for k, b in balsas.items()]
 
@@ -22,19 +28,26 @@ def test_two_logs():
 
     # check the contents
 
-    assert len(balsas["a"].get_string_list()) == 2  # gets the 'c' log in addition to the 'a' log
+    sl = balsas["a"].get_string_list()
+    assert len(sl) == 5  # gets the 'b' and 'c' log in addition to the 'a' log
+
     assert len(balsas["b"].get_string_list()) == 1  # just the 'b'
 
     log_string_min_length = 35  # SWAG to try to ensure the log string includes the time stamp, level, etc.
 
-    assert balsas["a"].get_string_list()[0][-1] == "a"
+    sl = balsas["a"].get_string_list()
+    assert sl[2][-1] == "a"
     assert len(balsas["a"].get_string_list()[0]) > log_string_min_length
 
-    assert balsas["a"].get_string_list()[1][-1] == "c"
+    sl = balsas["a"].get_string_list()
+    assert sl[-1][-1] == "c"
     assert len(balsas["a"].get_string_list()[1]) > log_string_min_length
 
     assert balsas["b"].get_string_list()[0][-1] == "b"
     assert len(balsas["b"].get_string_list()[0]) > log_string_min_length
+
+    for b in balsas.values():
+        b.remove()
 
 
 if __name__ == "__main__":

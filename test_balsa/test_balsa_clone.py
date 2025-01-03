@@ -1,4 +1,4 @@
-from balsa import Balsa, balsa_clone
+from balsa import balsa_clone, Balsa, __author__
 
 
 class CustomBalsa(Balsa):
@@ -24,12 +24,12 @@ def test_balsa_clone_no_parent():
 
 def test_balsa_clone_parent():
 
-    my_balsa = Balsa("test_balsa_clone_parent_a", "parent_a")
+    my_balsa = Balsa("test_balsa_clone_parent_a", __author__)
     my_balsa_config = my_balsa.config_as_dict()
 
     new_balsa = balsa_clone(my_balsa_config, "test_balsa_clone_parent_b", my_balsa)
     new_balsa.init_logger()
-    new_balsa.log.error("no parent")
+    new_balsa.log.error("error")
 
     my_balsa.remove()
     new_balsa.remove()
