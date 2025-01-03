@@ -22,13 +22,14 @@ Major Features
 - Sane default log levels.  Single `verbose` flag.  (All levels can be overridden if desired.)
 - Both console (stdout) and GUI (popup window) support.
 - Log file support. Uses `appdirs` for log file paths.
-- Structured logging (optional - you can still use simple strings and/or legacy logging string formatting).
+- Structured logging via `yasf.sf()` (optional - you can still use simple strings).
 - `Sentry <http://www.sentry.io/>`_ support. Just provide your `Sentry DSN <https://docs.sentry.io/quickstart/#configure-the-dsn>`_.
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, MacOS).  Pure Python.
 - Multiprocessing support.
-- AWS CloudWatch logs support.
+- `AWS CloudWatch logs <https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html/>`_ support.
+  Structured logs enable `CloudWatch Logs Insights`.
 
 Simple Example
 ==============
