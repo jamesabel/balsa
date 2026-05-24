@@ -9,6 +9,7 @@ from pathlib import Path
 from copy import deepcopy
 
 import attr
+from tobool import to_bool_strict
 
 try:
     import sentry_sdk
@@ -31,6 +32,7 @@ from attr import attrs, attrib
 verbose_arg_string = "verbose"
 log_dir_arg_string = "logdir"
 delete_existing_arg_string = "dellog"
+balsa_dev_env_var = "BALSA_DEV"
 
 
 log = get_logger(__application_name__)
@@ -242,7 +244,7 @@ class Balsa(object):
 
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
-        if self.use_sentry:
+        if self.use_sentry and not self.get_balsa_dev_via_env_var():
 
             if self.sentry_max_string_len is not None:
                 sentry_sdk.utils.MAX_STRING_LENGTH = self.sentry_max_string_len
@@ -312,6 +314,13 @@ class Balsa(object):
         :return: Sentry DSN or None if environmental variable not set
         """
         return os.environ.get("SENTRY_DSN")
+
+    def get_balsa_dev_via_env_var(self) -> bool:
+        """
+        Get whether Balsa development mode is enabled via an environmental variable.
+        :return: True when Sentry should be disabled for local development
+        """
+        return to_bool_strict(os.environ.get(balsa_dev_env_var, False))
 
     def set_std(self):
         """

@@ -25,5 +25,17 @@ def test_balsa_sentry():
         print("Please set SENTRY_DSN environment variable to have a good %s test" % __name__)
 
 
+def test_balsa_dev_disables_sentry(monkeypatch):
+    application_name = "test_balsa_dev_disables_sentry"
+    monkeypatch.delenv("SENTRY_DSN", raising=False)
+    monkeypatch.setenv("BALSA_DEV", "TRUE")
+
+    balsa = TstCLIBalsa(application_name)
+    balsa.use_sentry = True
+    balsa.init_logger()
+
+    balsa.remove()
+
+
 if __name__ == "__main__":
     test_balsa_sentry()
