@@ -9,6 +9,8 @@ class BalsaFormatter(Formatter):
     """
 
     def formatTime(self, record: LogRecord, datefmt: Union[str, None] = None) -> str:
-        assert datefmt is None  # static format
+        if datefmt is not None:
+            # an explicit datefmt overrides the ISO 8601 default
+            return super().formatTime(record, datefmt)
         time_stamp = datetime.fromtimestamp(record.created)
         return time_stamp.astimezone().isoformat()

@@ -44,29 +44,36 @@ if awsimple_exists:
             :param kwargs: AWS credentials (passed to boto3 via AWSimple). e.g. profile name or key pairs.
             """
             self.log_group = log_group
-            super().__init__(**kwargs)
+            self.aws_kwargs = kwargs
+            self.logs_access = None  # created lazily on first use, then reused (avoids creating a new boto3 session for every log record)
+            super().__init__()
 
         def handle(self, record):
-            args_json, kwargs_json = sf_separate(record.message)
-            if kwargs_json is None:
-                put_dict = {}
-            else:
-                put_dict = json.loads(kwargs_json)
-            if args_json is not None and len(args_json) > 0:
-                put_dict["message"] = args_json
+            try:
+                args_json, kwargs_json = sf_separate(record.getMessage())
+                if kwargs_json is None:
+                    put_dict = {}
+                else:
+                    put_dict = json.loads(kwargs_json)
+                if args_json is not None and len(args_json) > 0:
+                    put_dict["message"] = args_json
 
-            for attribute in ["created", "filename", "funcName", "levelname", "lineno", "module", "name", "pathname", "process", "thread", "threadName", "processName"]:
-                if attribute in put_dict:
-                    attribute = f"_{attribute}"
-                put_dict[attribute] = getattr(record, attribute)
+                for attribute in ["created", "filename", "funcName", "levelname", "lineno", "module", "name", "pathname", "process", "thread", "threadName", "processName"]:
+                    if attribute in put_dict:
+                        attribute = f"_{attribute}"
+                    put_dict[attribute] = getattr(record, attribute)
 
-            put_dict["system_user_name"] = get_user_name()
-            put_dict["system_computer_name"] = get_computer_name()
+                put_dict["system_user_name"] = get_user_name()
+                put_dict["system_computer_name"] = get_computer_name()
 
-            put_string = json.dumps(put_dict)
+                put_string = json.dumps(put_dict)
 
-            noci_cloud_log_access = LogsAccess(self.log_group)
-            noci_cloud_log_access.put(put_string)
+                if self.logs_access is None:
+                    self.logs_access = LogsAccess(self.log_group, **self.aws_kwargs)
+                self.logs_access.put(put_string)
+            except Exception:
+                # a cloud logging failure (e.g. a network error) must not raise out of the user's log call
+                self.handleError(record)
 
 else:
 
@@ -74,6 +81,6 @@ else:
 
     class AWSCloudWatchLogHandler(logging.NullHandler):  # type: ignore
         # dummy so we don't get an import error
-        def __init__(self, log_group: str):
+        def __init__(self, log_group: str, **kwargs):
             log.error("AWS CloudWatch enabled but awsimple not installed")
             super().__init__()

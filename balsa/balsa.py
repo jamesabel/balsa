@@ -12,7 +12,6 @@ import attr
 
 try:
     import sentry_sdk
-    import sentry_sdk.utils
     from sentry_sdk.integrations.logging import LoggingIntegration as SentryLoggingIntegration
 except ImportError:
     pass
@@ -43,7 +42,7 @@ def traceback_string():
     :return: formatted traceback string (or None if no traceback available)
     """
     tb_string = None
-    exc_type, exc_value, exc_traceback = traceback.sys.exc_info()
+    exc_type, exc_value, exc_traceback = sys.exc_info()
     if exc_type is not None:
         display_lines_list = [str(exc_value)] + traceback.format_tb(exc_traceback)
         tb_string = "\n".join(display_lines_list)
@@ -58,6 +57,7 @@ class StreamToLogger:
     def __init__(self, logger: logging.Logger, level: int):
         self.logger = logger
         self.level = level
+        self.encoding = "utf-8"
 
     def write(self, buf: str):
         for line in buf.strip().splitlines():
@@ -65,8 +65,15 @@ class StreamToLogger:
             if len(stripped_line) > 0:
                 self.logger.log(self.level, stripped_line)
 
+    def writelines(self, lines):
+        for line in lines:
+            self.write(line)
+
     def flush(self):
         pass
+
+    def isatty(self) -> bool:
+        return False
 
 
 @attrs
@@ -79,7 +86,7 @@ class Balsa(object):
     gui = attrib(default=False, type=bool)
     delete_existing_log_files = attrib(default=False, type=bool)
 
-    max_bytes = attrib(default=100 * 1e6, type=float)
+    max_bytes = attrib(default=100 * 1000 * 1000, type=int)
     backup_count = attrib(default=3, type=int)
     error_callback = attrib(default=None)
     max_string_list_entries = attrib(default=100, type=int)
@@ -108,22 +115,23 @@ class Balsa(object):
     use_sentry_celery = attrib(default=False, type=bool)
 
     sentry_dsn = attrib(default=None, type=str)
-    # As of this writing Sentry's default is 512, but if we log a stack trace it tends to get truncated. Set to None to use the default from Sentry.
+    # Sentry's default max value length tends to truncate logged stack traces. Set to None to use the default from Sentry.
     sentry_max_string_len = attrib(default=8 * 1024)  # type: Union[int, None]
-    sentry_breadcrumb_level = logging.INFO  # the Sentry default level (AKA breadcrumb level) is also INFO
-    sentry_event_level = logging.ERROR  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
+    sentry_breadcrumb_level = attrib(default=logging.INFO, type=int)  # the Sentry default level (AKA breadcrumb level) is also INFO
+    sentry_event_level = attrib(default=logging.ERROR, type=int)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
 
     # AWS CloudWatch logs
     use_aws_cloudwatch_logs = attrib(default=False, type=bool)
-    aws_credentials = attrib(default=dict(), type=dict)  # kwargs that will get sent to boto3 (via AWSimple)
+    aws_credentials = attrib(factory=dict, type=dict)  # kwargs that will get sent to boto3 (via AWSimple)
 
     instance_name = attrib(default=None, type=str)
 
-    use_file_logging = True
+    # turn off file logging, e.g. for cloud environments where it's not recommended and/or possible to write to the local file system
+    use_file_logging = attrib(default=True, type=bool)
 
     # a separate rate limit for each level
     rate_limits = attrib(
-        default={
+        factory=lambda: {
             level: {"count": 2, "time": 60.0}
             for level in [
                 logging.CRITICAL,
@@ -154,6 +162,10 @@ class Balsa(object):
         Initialize the logger.  Call exactly once.
         """
 
+        if self.handlers is not None:
+            log.warning(f'init_logger() already called for this Balsa instance ("{self.name}") - ignoring')
+            return
+
         log_formatter = BalsaFormatter(self.log_formatter_string)
 
         assert self.name is not None
@@ -175,7 +187,6 @@ class Balsa(object):
         if self.log.hasHandlers():
             self.log.info("Logger already initialized.")
 
-        # use turn off file logging, e.g. for cloud environments where it's not recommended and/or possible to write to the local file system
         if self.use_file_logging:
             # create file handler
             if self.log_directory is None:
@@ -189,17 +200,14 @@ class Balsa(object):
                 self.log_directory.mkdir(parents=True, exist_ok=True)
                 if self.delete_existing_log_files:
                     # need to glob since there are potentially many files due to the "rotating" file handler
-                    for file_path in Path.glob(self.log_directory, f"*{self.log_extension}"):
+                    # (only delete this application's log files - the log directory may be shared with other applications)
+                    for file_path in self.log_directory.glob(f"{self.name}*{self.log_extension}*"):
                         try:
                             file_path.unlink()
                         except OSError:
                             pass
 
-                if self.instance_name is None:
-                    file_name = f"{self.name}{self.log_extension}"
-                else:
-                    file_name = f"{self.name}_{self.instance_name}{self.log_extension}"
-                self.log_path = Path(self.log_directory, file_name)
+                self.log_path = self.get_log_path()
 
                 file_handler = logging.handlers.RotatingFileHandler(self.log_path, maxBytes=self.max_bytes, backupCount=self.backup_count)
                 file_handler.setFormatter(log_formatter)
@@ -244,9 +252,6 @@ class Balsa(object):
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
 
-            if self.sentry_max_string_len is not None:
-                sentry_sdk.utils.MAX_STRING_LENGTH = self.sentry_max_string_len
-
             sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
 
             sentry_logging = SentryLoggingIntegration(level=self.sentry_breadcrumb_level, event_level=self.sentry_event_level)
@@ -273,21 +278,21 @@ class Balsa(object):
 
                 integrations.append(CeleryIntegration())
 
-            if self.sentry_dsn is None:
-                if (sentry_dsn := self.get_sentry_dsn_via_env_var()) is None:
-                    raise ValueError("Missing Sentry DSN - either set as an environmental variable or a parameter to the Balsa constructor")
-                else:
-                    sentry_sdk.init(
-                        dsn=sentry_dsn,
-                        sample_rate=sample_rate,
-                        integrations=integrations,
-                    )
-            else:
-                sentry_sdk.init(
-                    dsn=self.sentry_dsn,
-                    sample_rate=sample_rate,
-                    integrations=integrations,
-                )
+            if (sentry_dsn := self.sentry_dsn) is None:
+                sentry_dsn = self.get_sentry_dsn_via_env_var()
+            if sentry_dsn is None:
+                raise ValueError("Missing Sentry DSN - either set as an environmental variable or a parameter to the Balsa constructor")
+
+            sentry_kwargs = {}
+            if self.sentry_max_string_len is not None:
+                sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
+
+            sentry_sdk.init(
+                dsn=sentry_dsn,
+                sample_rate=sample_rate,
+                integrations=integrations,
+                **sentry_kwargs,
+            )
 
         if self.use_aws_cloudwatch_logs:
             aws_cloudwatch_log_handler = AWSCloudWatchLogHandler(self.name, **self.aws_credentials)
@@ -317,6 +322,9 @@ class Balsa(object):
         """
         Send stdout and stderr to logs. Generally used for GUI apps since GUI apps should not write to stdout or stderr. Derived classes can override this method to choose a
         different set of levels (or just "pass" to avoid the redirect completely).
+
+        Note that in verbose mode std stream writes are logged at WARNING, which meets the dialog box handler's verbose threshold - i.e. stray print() output pops up a
+        (rate limited) dialog box so it is surfaced rather than lost.
         """
         if self.verbose:
             sys.stdout = StreamToLogger(self.log, logging.WARNING)
@@ -327,9 +335,9 @@ class Balsa(object):
 
     def get_log_path(self) -> Path:
         if self.instance_name is None:
-            file_name = "{self.name}{self.log_extension}"
+            file_name = f"{self.name}{self.log_extension}"
         else:
-            file_name = "{self.name}_{self.instance_name}{self.log_extension}"
+            file_name = f"{self.name}_{self.instance_name}{self.log_extension}"
         log_path = Path(self.log_directory, file_name)
         return log_path
 
@@ -342,13 +350,14 @@ class Balsa(object):
 
     def config_as_dict(self) -> Dict[str, Any]:
         """
-        Get the Balsa configuration as a dict. Useful for passing to balsa_clone().
+        Get the Balsa configuration as a dict. Useful for passing to balsa_clone(). Note that non-pickle-able configuration (e.g. error_callback) is not included.
         :return: dict of Balsa configuration
         """
         config = {}
-        config_types = [bool, str, Path, int, float]  # only pickle-able types
+        config_types = [bool, str, Path, int, float, dict]  # only pickle-able types
+        runtime_attributes = {"handlers", "log"}  # runtime state, not configuration
         for k, v in attr.asdict(self).items():
-            if any([isinstance(v, config_type) for config_type in config_types]):
+            if k not in runtime_attributes and any([isinstance(v, config_type) for config_type in config_types]):
                 config[k] = v
         return config
 
@@ -360,7 +369,7 @@ class Balsa(object):
             self.log.handlers.clear()  # removeHandler() doesn't work
 
 
-def balsa_clone(config_dict: Dict[str, Any], instance_name: str, parent_instance: Balsa = None) -> Balsa:
+def balsa_clone(config_dict: Dict[str, Any], instance_name: str, parent_instance: Union[Balsa, None] = None) -> Balsa:
     """
     Create another Balsa instance from a config dict and modify it with a given instance name. Note that init_logger() must still be called.
 
@@ -380,6 +389,8 @@ def balsa_clone(config_dict: Dict[str, Any], instance_name: str, parent_instance
     config_dict = deepcopy(config_dict)  # so we don't modify the caller's dict
     config_dict["instance_name"] = instance_name
     config_dict["delete_existing_log_files"] = False  # deletion of existing log files is only possible by the original Balsa instance since all files in the directory are removed
+    config_dict["handlers"] = None  # runtime state must not be inherited from the parent instance (the clone gets its own handlers via init_logger())
+    config_dict["log"] = None
     new_balsa = attr.evolve(balsa_instance, **config_dict)
     return new_balsa
 
