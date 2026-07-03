@@ -9,6 +9,7 @@ from pathlib import Path
 from copy import deepcopy
 
 import attr
+from tobool import to_bool_strict
 
 try:
     import sentry_sdk
@@ -30,6 +31,7 @@ from attr import attrs, attrib
 verbose_arg_string = "verbose"
 log_dir_arg_string = "logdir"
 delete_existing_arg_string = "dellog"
+balsa_dev_env_var = "BALSA_DEV"
 
 
 log = get_logger(__application_name__)
@@ -103,7 +105,7 @@ class Balsa(object):
     propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
 
     # cloud services
-    # set inhibit_cloud_services to True to inhibit messages from going to cloud services (good for testing)
+    # set inhibit_cloud_services to True to turn off all cloud services - Sentry and AWS CloudWatch logs (good for testing)
     inhibit_cloud_services = attrib(default=False, type=bool)
 
     # sentry
@@ -251,55 +253,61 @@ class Balsa(object):
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
         if self.use_sentry:
+            if self.inhibit_cloud_services:
+                self.log.info("Sentry not initialized since inhibit_cloud_services is set")
+            elif self.get_balsa_dev_via_env_var():
+                # warning (not info) since forgetting to unset the development mode environment variable in production would silently turn off error reporting
+                self.log.warning(f"Sentry not initialized since the {balsa_dev_env_var} environment variable is set")
+            else:
+                sentry_logging = SentryLoggingIntegration(level=self.sentry_breadcrumb_level, event_level=self.sentry_event_level)
 
-            sample_rate = 0.0 if self.inhibit_cloud_services else 1.0
+                integrations = [sentry_logging]
+                if self.use_sentry_django:
+                    from sentry_sdk.integrations.django import DjangoIntegration
 
-            sentry_logging = SentryLoggingIntegration(level=self.sentry_breadcrumb_level, event_level=self.sentry_event_level)
+                    integrations.append(DjangoIntegration())
+                if self.use_sentry_flask:
+                    from sentry_sdk.integrations.flask import FlaskIntegration
 
-            integrations = [sentry_logging]
-            if self.use_sentry_django:
-                from sentry_sdk.integrations.django import DjangoIntegration
+                    integrations.append(FlaskIntegration())
+                if self.use_sentry_lambda:
+                    from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
-                integrations.append(DjangoIntegration())
-            if self.use_sentry_flask:
-                from sentry_sdk.integrations.flask import FlaskIntegration
+                    integrations.append(AwsLambdaIntegration())
+                if self.use_sentry_sqlalchemy:
+                    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
-                integrations.append(FlaskIntegration())
-            if self.use_sentry_lambda:
-                from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+                    integrations.append(SqlalchemyIntegration())
+                if self.use_sentry_celery:
+                    from sentry_sdk.integrations.celery import CeleryIntegration
 
-                integrations.append(AwsLambdaIntegration())
-            if self.use_sentry_sqlalchemy:
-                from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+                    integrations.append(CeleryIntegration())
 
-                integrations.append(SqlalchemyIntegration())
-            if self.use_sentry_celery:
-                from sentry_sdk.integrations.celery import CeleryIntegration
+                if (sentry_dsn := self.sentry_dsn) is None:
+                    sentry_dsn = self.get_sentry_dsn_via_env_var()
+                if sentry_dsn is None:
+                    raise ValueError("Missing Sentry DSN - either set as an environmental variable or a parameter to the Balsa constructor")
 
-                integrations.append(CeleryIntegration())
+                sentry_kwargs = {}
+                if self.sentry_max_string_len is not None:
+                    sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
 
-            if (sentry_dsn := self.sentry_dsn) is None:
-                sentry_dsn = self.get_sentry_dsn_via_env_var()
-            if sentry_dsn is None:
-                raise ValueError("Missing Sentry DSN - either set as an environmental variable or a parameter to the Balsa constructor")
-
-            sentry_kwargs = {}
-            if self.sentry_max_string_len is not None:
-                sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
-
-            sentry_sdk.init(
-                dsn=sentry_dsn,
-                sample_rate=sample_rate,
-                integrations=integrations,
-                **sentry_kwargs,
-            )
+                sentry_sdk.init(
+                    dsn=sentry_dsn,
+                    sample_rate=1.0,
+                    integrations=integrations,
+                    **sentry_kwargs,
+                )
 
         if self.use_aws_cloudwatch_logs:
-            aws_cloudwatch_log_handler = AWSCloudWatchLogHandler(self.name, **self.aws_credentials)
-            aws_cloudwatch_log_handler.setFormatter(log_formatter)
-            aws_cloudwatch_log_handler.setLevel(logging.WARNING)
-            self.log.addHandler(aws_cloudwatch_log_handler)
-            self.handlers[HandlerType.AWSCloudWatch] = aws_cloudwatch_log_handler
+            if self.inhibit_cloud_services:
+                self.log.info("AWS CloudWatch logs not initialized since inhibit_cloud_services is set")
+            else:
+                aws_cloudwatch_log_handler = AWSCloudWatchLogHandler(self.name, **self.aws_credentials)
+                aws_cloudwatch_log_handler.setFormatter(log_formatter)
+                aws_cloudwatch_log_handler.setLevel(logging.WARNING)
+                self.log.addHandler(aws_cloudwatch_log_handler)
+                self.handlers[HandlerType.AWSCloudWatch] = aws_cloudwatch_log_handler
 
         # error handler for callback on error or above
         # (this is last since the user may do a sys.exit() in the error callback)
@@ -317,6 +325,21 @@ class Balsa(object):
         :return: Sentry DSN or None if environmental variable not set
         """
         return os.environ.get("SENTRY_DSN")
+
+    def get_balsa_dev_via_env_var(self) -> bool:
+        """
+        Get whether Balsa development mode is enabled via an environmental variable. Derived classes should override this to use a different environmental variable.
+        :return: True when Sentry should be disabled for local development
+        """
+        value = os.environ.get(balsa_dev_env_var)
+        if value is None:
+            return False
+        try:
+            return to_bool_strict(value)
+        except ValueError:
+            # this env var is typically set by hand, so tolerate (but flag) a value that isn't a valid boolean rather than crashing logger initialization
+            log.warning(f'{balsa_dev_env_var}="{value}" is not a valid boolean - treating as False (Sentry stays enabled)')
+            return False
 
     def set_std(self):
         """

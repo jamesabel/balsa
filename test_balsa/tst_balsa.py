@@ -9,6 +9,11 @@ from balsa import Balsa, __author__
 
 from .popup_window import is_popup_dialog_with_ok
 
+# The fail-safe aborts pyautogui calls when the mouse is in a screen corner - where users naturally park the cursor while GUI tests run.
+# These tests only use pyautogui.press("enter") (keyboard only, no mouse control), so there is no runaway-mouse scenario for the fail-safe
+# to abort, and press_enter() already gives up via pytest.fail() if a popup never appears.
+pyautogui.FAILSAFE = False
+
 # for testing, no rate limits unless explicitly set
 big_number = int(1e6)
 default_rate_limits = {
