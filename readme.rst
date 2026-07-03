@@ -24,6 +24,8 @@ Major Features
 - Log file support. Uses `appdirs` for log file paths.
 - Structured logging via `yasf.sf()` (optional - you can still use simple strings).
 - `Sentry <http://www.sentry.io/>`_ support. Just provide your `Sentry DSN <https://docs.sentry.io/quickstart/#configure-the-dsn>`_.
+- `Sentry structured logs <https://docs.sentry.io/platforms/python/logs/>`_ support. Set `use_sentry_logs` to send log records to
+  Sentry as searchable, first-class log entries (requires sentry-sdk 2.35+).
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, MacOS).  Pure Python.

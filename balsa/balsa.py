@@ -122,6 +122,10 @@ class Balsa(object):
     sentry_breadcrumb_level = attrib(default=logging.INFO, type=int)  # the Sentry default level (AKA breadcrumb level) is also INFO
     sentry_event_level = attrib(default=logging.ERROR, type=int)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
 
+    # Sentry structured logs (https://docs.sentry.io/platforms/python/logs/) - send log records to Sentry as searchable, first-class log entries (requires sentry-sdk >= 2.35.0)
+    use_sentry_logs = attrib(default=False, type=bool)
+    sentry_logs_level = attrib(default=logging.INFO, type=int)  # minimum level for log records sent to Sentry structured logs (the Sentry SDK default is also INFO)
+
     # AWS CloudWatch logs
     use_aws_cloudwatch_logs = attrib(default=False, type=bool)
     aws_credentials = attrib(factory=dict, type=dict)  # kwargs that will get sent to boto3 (via AWSimple)
@@ -259,7 +263,11 @@ class Balsa(object):
                 # warning (not info) since forgetting to unset the development mode environment variable in production would silently turn off error reporting
                 self.log.warning(f"Sentry not initialized since the {balsa_dev_env_var} environment variable is set")
             else:
-                sentry_logging = SentryLoggingIntegration(level=self.sentry_breadcrumb_level, event_level=self.sentry_event_level)
+                sentry_logging_kwargs = {"level": self.sentry_breadcrumb_level, "event_level": self.sentry_event_level}
+                if self.use_sentry_logs:
+                    # only pass sentry_logs_level when in use since the parameter requires sentry-sdk >= 2.35.0
+                    sentry_logging_kwargs["sentry_logs_level"] = self.sentry_logs_level
+                sentry_logging = SentryLoggingIntegration(**sentry_logging_kwargs)
 
                 integrations = [sentry_logging]
                 if self.use_sentry_django:
@@ -291,6 +299,9 @@ class Balsa(object):
                 sentry_kwargs = {}
                 if self.sentry_max_string_len is not None:
                     sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
+                if self.use_sentry_logs:
+                    # only pass enable_logs when in use since the option requires sentry-sdk >= 2.35.0
+                    sentry_kwargs["enable_logs"] = True
 
                 sentry_sdk.init(
                     dsn=sentry_dsn,
