@@ -11,11 +11,14 @@ from copy import deepcopy
 import attr
 from tobool import to_bool_strict
 
+# the Sentry SDK is optional - Balsa works without it as long as Sentry is not requested
 try:
     import sentry_sdk
     from sentry_sdk.integrations.logging import LoggingIntegration as SentryLoggingIntegration
+
+    sentry_sdk_available = True
 except ImportError:
-    pass
+    sentry_sdk_available = False
 
 from balsa.get_logger import get_logger
 from balsa.handlers import HandlerType, BalsaNullHandler, BalsaStringListHandler
@@ -121,6 +124,10 @@ class Balsa(object):
     sentry_max_string_len = attrib(default=8 * 1024)  # type: Union[int, None]
     sentry_breadcrumb_level = attrib(default=logging.INFO, type=int)  # the Sentry default level (AKA breadcrumb level) is also INFO
     sentry_event_level = attrib(default=logging.ERROR, type=int)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
+
+    # Sentry structured logs (https://docs.sentry.io/platforms/python/logs/) - send log records to Sentry as searchable, first-class log entries (requires sentry-sdk >= 2.35.0)
+    use_sentry_logs = attrib(default=False, type=bool)  # can be used with or without use_sentry
+    sentry_logs_level = attrib(default=logging.INFO, type=int)  # minimum level for log records sent to Sentry structured logs (the Sentry SDK default is also INFO)
 
     # AWS CloudWatch logs
     use_aws_cloudwatch_logs = attrib(default=False, type=bool)
@@ -252,14 +259,20 @@ class Balsa(object):
 
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
-        if self.use_sentry:
-            if self.inhibit_cloud_services:
+        if self.use_sentry or self.use_sentry_logs:
+            if not sentry_sdk_available:
+                self.log.warning("Sentry requested (use_sentry and/or use_sentry_logs) but the Sentry SDK is not installed - Sentry will not be used ('pip install sentry-sdk')")
+            elif self.inhibit_cloud_services:
                 self.log.info("Sentry not initialized since inhibit_cloud_services is set")
             elif self.get_balsa_dev_via_env_var():
                 # warning (not info) since forgetting to unset the development mode environment variable in production would silently turn off error reporting
                 self.log.warning(f"Sentry not initialized since the {balsa_dev_env_var} environment variable is set")
             else:
-                sentry_logging = SentryLoggingIntegration(level=self.sentry_breadcrumb_level, event_level=self.sentry_event_level)
+                sentry_logging_kwargs = {"level": self.sentry_breadcrumb_level, "event_level": self.sentry_event_level}
+                if self.use_sentry_logs:
+                    # only pass sentry_logs_level when in use since the parameter requires sentry-sdk >= 2.35.0
+                    sentry_logging_kwargs["sentry_logs_level"] = self.sentry_logs_level
+                sentry_logging = SentryLoggingIntegration(**sentry_logging_kwargs)
 
                 integrations = [sentry_logging]
                 if self.use_sentry_django:
@@ -291,6 +304,9 @@ class Balsa(object):
                 sentry_kwargs = {}
                 if self.sentry_max_string_len is not None:
                     sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
+                if self.use_sentry_logs:
+                    # only pass enable_logs when in use since the option requires sentry-sdk >= 2.35.0
+                    sentry_kwargs["enable_logs"] = True
 
                 sentry_sdk.init(
                     dsn=sentry_dsn,
