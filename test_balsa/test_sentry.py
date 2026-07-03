@@ -78,6 +78,42 @@ def test_sentry_logs_enabled(monkeypatch):
     balsa.remove()
 
 
+def test_sentry_logs_without_use_sentry(monkeypatch):
+    # use_sentry_logs alone (without use_sentry) also initializes Sentry
+    application_name = "test_sentry_logs_without_use_sentry"
+    monkeypatch.delenv(balsa_dev_env_var, raising=False)
+    init_calls = _spy_sentry_init(monkeypatch)
+
+    balsa = TstCLIBalsa(application_name)
+    balsa.use_sentry_logs = True
+    balsa.sentry_dsn = fake_sentry_dsn
+    balsa.init_logger()
+
+    assert len(init_calls) == 1
+    assert init_calls[0]["enable_logs"] is True
+
+    balsa.remove()
+
+
+def test_sentry_sdk_not_installed(monkeypatch):
+    # when the Sentry SDK is not installed, requesting Sentry warns instead of raising
+    application_name = "test_sentry_sdk_not_installed"
+    monkeypatch.delenv(balsa_dev_env_var, raising=False)
+    monkeypatch.setattr("balsa.balsa.sentry_sdk_available", False)
+    init_calls = _spy_sentry_init(monkeypatch)
+
+    balsa = TstCLIBalsa(application_name)
+    balsa.use_sentry = True
+    balsa.use_sentry_logs = True
+    balsa.sentry_dsn = fake_sentry_dsn
+    balsa.init_logger()
+
+    assert len(init_calls) == 0
+    assert any("Sentry SDK is not installed" in log_string for log_string in balsa.get_string_list())
+
+    balsa.remove()
+
+
 def test_balsa_dev_disables_sentry(monkeypatch):
     application_name = "test_balsa_dev_disables_sentry"
     monkeypatch.setenv(balsa_dev_env_var, "TRUE")

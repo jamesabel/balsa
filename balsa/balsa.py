@@ -11,11 +11,14 @@ from copy import deepcopy
 import attr
 from tobool import to_bool_strict
 
+# the Sentry SDK is optional - Balsa works without it as long as Sentry is not requested
 try:
     import sentry_sdk
     from sentry_sdk.integrations.logging import LoggingIntegration as SentryLoggingIntegration
+
+    sentry_sdk_available = True
 except ImportError:
-    pass
+    sentry_sdk_available = False
 
 from balsa.get_logger import get_logger
 from balsa.handlers import HandlerType, BalsaNullHandler, BalsaStringListHandler
@@ -123,7 +126,7 @@ class Balsa(object):
     sentry_event_level = attrib(default=logging.ERROR, type=int)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
 
     # Sentry structured logs (https://docs.sentry.io/platforms/python/logs/) - send log records to Sentry as searchable, first-class log entries (requires sentry-sdk >= 2.35.0)
-    use_sentry_logs = attrib(default=False, type=bool)
+    use_sentry_logs = attrib(default=False, type=bool)  # can be used with or without use_sentry
     sentry_logs_level = attrib(default=logging.INFO, type=int)  # minimum level for log records sent to Sentry structured logs (the Sentry SDK default is also INFO)
 
     # AWS CloudWatch logs
@@ -256,8 +259,10 @@ class Balsa(object):
 
         # setting up Sentry error handling
         # For the Client to work you need a SENTRY_DSN environmental variable set, or one must be provided.
-        if self.use_sentry:
-            if self.inhibit_cloud_services:
+        if self.use_sentry or self.use_sentry_logs:
+            if not sentry_sdk_available:
+                self.log.warning("Sentry requested (use_sentry and/or use_sentry_logs) but the Sentry SDK is not installed - Sentry will not be used ('pip install sentry-sdk')")
+            elif self.inhibit_cloud_services:
                 self.log.info("Sentry not initialized since inhibit_cloud_services is set")
             elif self.get_balsa_dev_via_env_var():
                 # warning (not info) since forgetting to unset the development mode environment variable in production would silently turn off error reporting
