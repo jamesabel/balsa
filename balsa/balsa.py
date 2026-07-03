@@ -323,8 +323,8 @@ class Balsa(object):
         Send stdout and stderr to logs. Generally used for GUI apps since GUI apps should not write to stdout or stderr. Derived classes can override this method to choose a
         different set of levels (or just "pass" to avoid the redirect completely).
 
-        Note that in verbose mode std stream writes are logged at WARNING, which meets the dialog box handler's verbose threshold - i.e. stray print() output pops up a
-        (rate limited) dialog box so it is surfaced rather than lost.
+        In practice GUI apps should never write to stdout nor stderr, so any such write is a defect worth surfacing. That is why in verbose mode std stream writes are
+        logged at WARNING, which meets the dialog box handler's verbose threshold - i.e. stray print() output intentionally pops up a (rate limited) dialog box.
         """
         if self.verbose:
             sys.stdout = StreamToLogger(self.log, logging.WARNING)
