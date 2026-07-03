@@ -12,7 +12,6 @@ application_name = "test_embedded_python"
 
 
 def test_embedded_python():
-    global save_tkinter
 
     # emulate embedded Python by removing tkinter module
     del sys.modules["tkinter"]

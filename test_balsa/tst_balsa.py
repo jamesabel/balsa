@@ -10,8 +10,18 @@ from balsa import Balsa, __author__
 from .popup_window import is_popup_dialog_with_ok
 
 # for testing, no rate limits unless explicitly set
-big_number = 1e6
-default_rate_limits = {logging.info: big_number, logging.error: big_number, logging.warning: big_number, logging.debug: big_number, logging.critical: big_number}
+big_number = int(1e6)
+default_rate_limits = {
+    level: {"count": big_number, "time": 0.0}
+    for level in [
+        logging.CRITICAL,
+        logging.ERROR,
+        logging.WARNING,
+        logging.INFO,
+        logging.DEBUG,
+        logging.NOTSET,
+    ]
+}
 
 
 class TstBalsa(Balsa):

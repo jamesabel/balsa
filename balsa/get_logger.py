@@ -1,5 +1,5 @@
-import os
 import logging
+from pathlib import Path
 
 
 def get_logger(name):
@@ -12,8 +12,6 @@ def get_logger(name):
 
     # if name is a python file, or a path to a python file, extract the module name
     if name.endswith(".py"):
-        name = name[:-3]
-        if os.sep in name:
-            name = name.split(os.sep)[-1]
+        name = Path(name).stem
 
     return logging.getLogger(name)

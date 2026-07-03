@@ -1,29 +1,31 @@
 import time
 import logging
 import os
+import threading
 
 from tobool import to_bool_strict
 
 from . import __application_name__
 
-tkinter_present = False
 use_mttkinter = to_bool_strict(os.environ.get(f"{__application_name__}_USE_MTTKINTER", True))  # in case the user doesn't want to use mttkinter (multi-threaded tkinter)
 
 try:
     if use_mttkinter:
-        import mttkinter as tkinter
+        # importing mttkinter monkey-patches tkinter to be thread-safe
+        import mttkinter  # noqa: F401
 except ModuleNotFoundError:
     pass
 
 try:
     import tkinter
+    from tkinter import messagebox
 
     tkinter_present = True
 except ModuleNotFoundError:
     tkinter_present = False
 
 
-def init_tkinter() -> tkinter.Tk | None:
+def init_tkinter() -> "tkinter.Tk | None":
     if tkinter_present:
         tk = tkinter.Tk()
         tk.withdraw()  # don't show the 'main' Tk window
@@ -55,47 +57,55 @@ class DialogBoxHandler(logging.NullHandler):
         """
         self.rate_limits = rate_limits
 
-        self.count = None
+        self.count = 0
         self.start_display_time_window = None
+        self.rate_limit_lock = threading.Lock()  # handle() can be called from multiple threads
 
         super().__init__()
 
+    @staticmethod
+    def _get_message_box(levelno: int):
+        # select the message box based on the level, including custom levels (Tk doesn't go any higher than error)
+        if levelno >= logging.ERROR:
+            return messagebox.showerror
+        elif levelno >= logging.WARNING:
+            return messagebox.showwarning
+        return messagebox.showinfo
+
     def handle(self, record):
 
-        now = time.time()
-        if record.levelno in self.rate_limits:
-            rate_limit = self.rate_limits[record.levelno]
-        else:
-            # no limit for custom levels
-            rate_limit = {"count": 1000, "time": 0.0}
-        if self.start_display_time_window is None or now - self.start_display_time_window >= rate_limit["time"]:
-            self.count = 0
-            self.start_display_time_window = now
-        if self.count < rate_limit["count"]:
-            if tkinter_present:
-                from tkinter import messagebox
+        if not tkinter_present:
+            return
 
-                boxes = {
-                    logging.INFO: messagebox.showinfo,
-                    logging.WARNING: messagebox.showwarning,
-                    logging.ERROR: messagebox.showerror,
-                    logging.CRITICAL: messagebox.showerror,  # Tk doesn't go any higher than error
-                }
-                tk = init_tkinter()
-                if tk is not None:
-                    boxes[record.levelno](f"{record.name} : {record.levelname}", record.msg, parent=tk)
+        now = time.time()
+        with self.rate_limit_lock:
+            if record.levelno in self.rate_limits:
+                rate_limit = self.rate_limits[record.levelno]
             else:
-                messagebox = None
-            self.count += 1
-            if self.count >= rate_limit["count"] and messagebox is not None:
-                t = "Limit Reached"
-                s = "Message box limit of %d in %.1f seconds for %s reached" % (
-                    int(rate_limit["count"]),
-                    float(rate_limit["time"]),
-                    str(record.levelname),
-                )
-                if tkinter_present:
-                    tk = init_tkinter()
-                    if tk is not None:
+                # no limit for custom levels
+                rate_limit = {"count": 1000, "time": 0.0}
+            if self.start_display_time_window is None or now - self.start_display_time_window >= rate_limit["time"]:
+                # start a new rate limit time window
+                self.count = 0
+                self.start_display_time_window = now
+            display = self.count < rate_limit["count"]
+            if display:
+                self.count += 1
+            limit_reached = display and self.count >= rate_limit["count"]
+
+        # display the message box outside the lock since it blocks until the user dismisses it
+        if display:
+            tk = init_tkinter()
+            if tk is not None:
+                try:
+                    self._get_message_box(record.levelno)(f"{record.name} : {record.levelname}", record.getMessage(), parent=tk)
+                    if limit_reached:
+                        t = "Limit Reached"
+                        s = "Message box limit of %d in %.1f seconds for %s reached" % (
+                            int(rate_limit["count"]),
+                            float(rate_limit["time"]),
+                            str(record.levelname),
+                        )
                         messagebox.showinfo(t, s, parent=tk)
-            self.start_display_time_window = now  # window is the time when the last window was closed
+                finally:
+                    tk.destroy()  # don't leak Tk root windows
