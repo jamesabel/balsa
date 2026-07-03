@@ -162,3 +162,5 @@ fabric.properties
 temp/
 .pytest_cache/
 log/
+CLAUDE.md
+run_claude.bat
