@@ -5,7 +5,7 @@ from .get_logger import get_logger
 from .formatter import BalsaFormatter
 from .handlers import HandlerType, BalsaNullHandler, BalsaStringListHandler
 from .guihandler import DialogBoxHandler, tkinter_present
-from .balsa import Balsa, verbose_arg_string, delete_existing_arg_string, log_dir_arg_string, balsa_clone
+from .balsa import Balsa, verbose_arg_string, delete_existing_arg_string, log_dir_arg_string, balsa_dev_env_var, balsa_clone
 from .balsa import get_global_balsa, get_global_config
 from .structured import BalsaRecord, balsa_log_regex
 from .balsa import traceback_string
