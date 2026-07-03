@@ -3,27 +3,28 @@ import logging
 
 import pytest
 
-from balsa import get_logger, __author__
+from balsa import get_logger
 
 from .tst_balsa import TstGUIBalsa, press_enter
 from .popup_window import is_popup_dialog_with_ok
+
 
 def test_gui_rate_limit():
     application_name = "test_gui_rate_limit"
 
     rate_limit_count = 2
-    balsa = TstGUIBalsa(application_name, __author__)
+    balsa = TstGUIBalsa(application_name)
     rate_limits = {
-            level: {"count": rate_limit_count, "time": 60.0}
-            for level in [
-                logging.CRITICAL,
-                logging.ERROR,
-                logging.WARNING,
-                logging.INFO,
-                logging.DEBUG,
-                logging.NOTSET,
-            ]
-        }
+        level: {"count": rate_limit_count, "time": 60.0}
+        for level in [
+            logging.CRITICAL,
+            logging.ERROR,
+            logging.WARNING,
+            logging.INFO,
+            logging.DEBUG,
+            logging.NOTSET,
+        ]
+    }
     balsa.rate_limits = rate_limits
 
     balsa.init_logger()

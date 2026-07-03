@@ -18,7 +18,7 @@ def test_balsa_exception():
     press_enter_thread.start()
 
     try:
-        a = 1.0 / 0.0  # generate an exception for testing (not a real error)
+        1.0 / 0.0  # generate an exception for testing (not a real error)
     except ZeroDivisionError:
         log.error("test exception")
         log.error(traceback_string())

@@ -39,7 +39,7 @@ class GuiThreadA(Thread):
         log = get_logger(application_name)
         try:
             log.info(f"{application_name} - before divide")
-            a = 3.0 / 0.0  # generate an exception for testing (not a real error)
+            3.0 / 0.0  # generate an exception for testing (not a real error)
         except ZeroDivisionError:
             log.info(f"{application_name} - division error exception")
             log.error(traceback_string())
@@ -58,7 +58,7 @@ class GuiThreadB(Thread):
         log = get_logger(application_name)
         try:
             log.info(f"{application_name} - before divide")
-            a = 2.0 / 0.0  # generate an exception for testing (not a real error)
+            2.0 / 0.0  # generate an exception for testing (not a real error)
         except ZeroDivisionError:
             log.info(f"{application_name} - division error exception")
             log.error(traceback_string())

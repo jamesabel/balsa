@@ -53,7 +53,7 @@ This will yield output of this form:
 
 .. code-block:: console
 
-    2021-10-24T10:49:04.150790-07:00 - example - balsa_simple_example.py - 12 - main - ERROR - my error example
+    2021-10-24T10:49:04.150790-07:00 - example - MainProcess - balsa_simple_example.py - 12 - main - ERROR - my error example
 
 Where did the name come from?
 =============================
