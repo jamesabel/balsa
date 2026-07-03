@@ -23,15 +23,18 @@ Major Features
 - Both console (stdout) and GUI (popup window) support.
 - Log file support. Uses `appdirs` for log file paths.
 - Structured logging via `yasf.sf()` (optional - you can still use simple strings).
-- `Sentry <http://www.sentry.io/>`_ support. Just provide your `Sentry DSN <https://docs.sentry.io/quickstart/#configure-the-dsn>`_.
+- `Sentry <https://sentry.io/>`_ support. Just provide your `Sentry DSN <https://docs.sentry.io/concepts/key-terms/dsn-explainer/>`_.
+  Set the `BALSA_DEV` environment variable to keep development-time errors out of Sentry.
 - `Sentry structured logs <https://docs.sentry.io/platforms/python/logs/>`_ support. Set `use_sentry_logs` to send log records to
   Sentry as searchable, first-class log entries (requires sentry-sdk 2.35+).
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
-- Cross platform (Windows, Linux, MacOS).  Pure Python.
+- Cross platform (Windows, Linux, macOS).  Pure Python.
 - Multiprocessing support.
-- `AWS CloudWatch logs <https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html/>`_ support.
+- `AWS CloudWatch logs <https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html>`_ support.
   Structured logs enable `CloudWatch Logs Insights`.
+- Optional error callback, e.g. to notify the user or exit on any error.
+- In-memory buffer of recent log lines via `Balsa.get_string_list()`.
 
 Simple Example
 ==============
@@ -51,11 +54,17 @@ Simple Example
         log.error('my error example')
 
 
+    if __name__ == '__main__':
+        main()
+
+
 This will yield output of this form:
 
 .. code-block:: console
 
     2021-10-24T10:49:04.150790-07:00 - example - MainProcess - balsa_simple_example.py - 12 - main - ERROR - my error example
+
+More examples are in the `examples <https://github.com/jamesabel/balsa/tree/main/examples>`_ directory.
 
 Where did the name come from?
 =============================
