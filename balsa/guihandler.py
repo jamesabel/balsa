@@ -9,10 +9,13 @@ from . import __application_name__
 
 use_mttkinter = to_bool_strict(os.environ.get(f"{__application_name__}_USE_MTTKINTER", True))  # in case the user doesn't want to use mttkinter (multi-threaded tkinter)
 
+mttkinter_imported = False
 try:
     if use_mttkinter:
         # importing mttkinter monkey-patches tkinter to be thread-safe
         import mttkinter  # noqa: F401
+
+        mttkinter_imported = True
 except ModuleNotFoundError:
     pass
 
@@ -23,6 +26,23 @@ try:
     tkinter_present = True
 except ModuleNotFoundError:
     tkinter_present = False
+
+if tkinter_present and mttkinter_imported:
+    # mtTkinter's Tk.__init__ hook schedules a perpetual 10 ms "after" chain (_check_events) on every Tk it wraps (which is every Tk in the process, e.g. also
+    # matplotlib TkAgg windows), but its destroy hook never cancels the pending timer. The stale timer stays in the thread's shared Tcl timer queue after
+    # destroy and fires an 'invalid command name "..._check_events"' background error in whichever Tk event loop runs next on that thread. Wrap destroy to
+    # cancel this Tk's pending "after" timers first.
+    _wrapped_tk_destroy = tkinter.Tk.destroy
+
+    def _tk_destroy_cancel_afters(self):
+        try:
+            for after_id in self.tk.call("after", "info"):
+                self.tk.call("after", "cancel", after_id)
+        except tkinter.TclError:
+            pass  # already partially torn down - proceed to destroy
+        _wrapped_tk_destroy(self)
+
+    tkinter.Tk.destroy = _tk_destroy_cancel_afters  # type: ignore[method-assign]
 
 
 # Creating and destroying a Tcl interpreter per dialog box - especially from multiple threads - can corrupt Tcl's process-global state and make a later
