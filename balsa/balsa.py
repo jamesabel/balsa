@@ -81,6 +81,14 @@ class StreamToLogger:
         return False
 
 
+def _normalize_rate_limits(rate_limits: dict) -> dict:
+    """
+    rate_limits is keyed by logging level - accept int or str keys (str keys appear after a JSON round-trip of the config, since JSON object keys must be strings) and
+    normalize to int so lookups by record.levelno work
+    """
+    return {int(level): limits for level, limits in rate_limits.items()}
+
+
 @attrs
 class Balsa(object):
 
@@ -150,7 +158,8 @@ class Balsa(object):
                 logging.DEBUG,
                 logging.NOTSET,
             ]
-        }
+        },
+        converter=_normalize_rate_limits,
     )
 
     def init_logger_from_args(self, args: argparse.Namespace):
@@ -398,6 +407,8 @@ class Balsa(object):
         for k, v in attr.asdict(self).items():
             if k not in runtime_attributes and any([isinstance(v, config_type) for config_type in config_types]):
                 config[k] = v
+        # JSON object keys must be strings, so export rate_limits with str keys to make the config JSON round-trip safe (ingestion normalizes keys back to int)
+        config["rate_limits"] = {str(level): limits for level, limits in config["rate_limits"].items()}
         return config
 
     def remove(self):

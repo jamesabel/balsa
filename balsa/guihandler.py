@@ -55,7 +55,8 @@ class DialogBoxHandler(logging.NullHandler):
         """
         :param rate_limits: dict with rate limits (in seconds) for each level, e.g. {logging.ERROR: {"count": 10, "time": 60.0}}
         """
-        self.rate_limits = rate_limits
+        # keys may be str (e.g. from a JSON round-trip of the Balsa config) - normalize to int so record.levelno lookups work
+        self.rate_limits = {int(level): limits for level, limits in rate_limits.items()}
 
         self.count = 0
         self.start_display_time_window = None
