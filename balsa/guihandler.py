@@ -25,24 +25,51 @@ except ModuleNotFoundError:
     tkinter_present = False
 
 
-def init_tkinter() -> "tkinter.Tk | None":
-    if tkinter_present:
-        tk = tkinter.Tk()
-        tk.withdraw()  # don't show the 'main' Tk window
+# Creating and destroying a Tcl interpreter per dialog box - especially from multiple threads - can corrupt Tcl's process-global state and make a later
+# tkinter.Tk() fail with 'Can't find a usable init.tcl ... couldn't read file ... "No error"' even though the file exists. So each thread gets one persistent
+# hidden Tk root that is reused for every dialog box and intentionally never destroyed.
+_tk_creation_lock = threading.Lock()  # Tcl interpreter creation is not safe to run concurrently from multiple threads
+_tk_per_thread = threading.local()
+# A Tcl interpreter has thread affinity, but garbage collection can finalize (and thus Tcl_DeleteInterp) an unreferenced Tk root from any thread - e.g. after
+# the creating thread has exited. Keep a strong reference to every root ever created so that never happens (bounded by the number of threads that show dialogs).
+_tk_roots: "list[tkinter.Tk]" = []
 
-        # make sure popup window has focus
-        tk.wm_attributes("-topmost", 1)
-        tk.focus_force()
+
+def init_tkinter() -> "tkinter.Tk | None":
+    """
+    Get the current thread's persistent hidden Tk root, creating it on first use.
+    :return: the Tk root for this thread, or None if tkinter is not available
+    """
+    if not tkinter_present:
+        return None
+
+    tk = getattr(_tk_per_thread, "tk", None)
+    if tk is None:
+        with _tk_creation_lock:
+            tk = tkinter.Tk()
+        tk.withdraw()  # don't show the 'main' Tk window
 
         if use_mttkinter:
             # check that if we're using tkinter, mttkinter is installed
             is_mttkinter = any("mttkinter" in d.lower() for d in dir(tk))
             assert is_mttkinter, "mttkinter is not installed"
 
-    else:
-        tk = None
+        _tk_per_thread.tk = tk
+        _tk_roots.append(tk)
+
+    # make sure popup window has focus (re-asserted on every dialog since the root is reused)
+    tk.wm_attributes("-topmost", 1)
+    tk.focus_force()
 
     return tk
+
+
+def _drop_thread_tk_root():
+    """
+    Forget the current thread's cached Tk root (e.g. after a TclError) so the next dialog box attempt starts with a fresh one. The broken root stays referenced
+    in _tk_roots rather than being destroyed, since destroying it may fail the same way and garbage collecting it from another thread is unsafe.
+    """
+    _tk_per_thread.tk = None
 
 
 class DialogBoxHandler(logging.NullHandler):
@@ -60,6 +87,7 @@ class DialogBoxHandler(logging.NullHandler):
         self.count = 0
         self.start_display_time_window = None
         self.rate_limit_lock = threading.Lock()  # handle() can be called from multiple threads
+        self._in_handle = threading.local()  # re-entrancy guard (a dialog box failure that gets logged must not try to pop up another dialog box)
 
         super().__init__()
 
@@ -75,6 +103,10 @@ class DialogBoxHandler(logging.NullHandler):
     def handle(self, record):
 
         if not tkinter_present:
+            return
+
+        if getattr(self._in_handle, "active", False):
+            # re-entrant call on this thread (e.g. a dialog box failure reported via stderr that is redirected back into the log) - don't recurse
             return
 
         now = time.time()
@@ -95,9 +127,10 @@ class DialogBoxHandler(logging.NullHandler):
 
         # display the message box outside the lock since it blocks until the user dismisses it
         if display:
-            tk = init_tkinter()
-            if tk is not None:
-                try:
+            self._in_handle.active = True
+            try:
+                tk = init_tkinter()
+                if tk is not None:
                     self._get_message_box(record.levelno)(f"{record.name} : {record.levelname}", record.getMessage(), parent=tk)
                     if limit_reached:
                         t = "Limit Reached"
@@ -107,5 +140,10 @@ class DialogBoxHandler(logging.NullHandler):
                             str(record.levelname),
                         )
                         messagebox.showinfo(t, s, parent=tk)
-                finally:
-                    tk.destroy()  # don't leak Tk root windows
+            except tkinter.TclError:
+                # Tk/Tcl failed (e.g. "Can't find a usable init.tcl") - a dialog box must never break the application's logging call, so report via the
+                # standard logging error path (stderr, subject to logging.raiseExceptions) and start fresh on the next dialog box
+                _drop_thread_tk_root()
+                self.handleError(record)
+            finally:
+                self._in_handle.active = False
