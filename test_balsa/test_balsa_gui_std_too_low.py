@@ -14,7 +14,8 @@ def test_balsa_gui_std_too_low():
     balsa.verbose = False
     balsa.init_logger()
 
-    press_enter_thread = threading.Thread(target=press_enter)
+    # safety net: dismiss the popup if one wrongly appears - but no popup is the expected outcome here
+    press_enter_thread = threading.Thread(target=press_enter, kwargs={"expect_popup": False})
     press_enter_thread.start()
     print("YOU SHOULD NOT SEE ME!!!")  # will be too low of a log level and not do anything
     popup_present = is_popup_dialog_with_ok()

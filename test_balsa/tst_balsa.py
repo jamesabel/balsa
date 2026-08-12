@@ -49,7 +49,12 @@ class TstGUIBalsa(TstBalsa):
         super().__init__(name, gui=True, is_root=is_root, rate_limits=rate_limits)
 
 
-def press_enter(n: int = 1, enter_press_time: float = 1.0):
+def press_enter(n: int = 1, enter_press_time: float = 1.0, expect_popup: bool = True):
+    """
+    Wait for a popup dialog and dismiss it with Enter key presses. Pass expect_popup=False from tests that verify no popup appears - a missing popup is then the
+    expected outcome, so return quietly instead of pytest.fail()-ing (which in this worker thread can't fail the test anyway - it just surfaces as a
+    PytestUnhandledThreadExceptionWarning). A popup that wrongly shows up is still dismissed so it doesn't linger; the test's own assertion reports the failure.
+    """
     found = False
     count = 0
     while not found and count < 10:
@@ -57,7 +62,9 @@ def press_enter(n: int = 1, enter_press_time: float = 1.0):
         time.sleep(1.0)
         count += 1
     if not found:
-        pytest.fail("press_enter: popup dialog not found")
+        if expect_popup:
+            pytest.fail("press_enter: popup dialog not found")
+        return
     for i in range(n):
         time.sleep(enter_press_time)
         pyautogui.press("enter")
