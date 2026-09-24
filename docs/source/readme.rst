@@ -19,7 +19,7 @@ Installation
 Major Features
 ==============
 - Simple to use.  Add full-featured Python logging in just a few lines of code.
-- Sane default log levels.  Single `verbose` flag.  (All levels can be overridden if desired.)
+- Sane default log levels.  Single `verbose` flag.  (All levels can be overridden if desired, e.g. `console_log_level`.)
 - Both console (stdout) and GUI (popup window) support.
 - Log file support. Uses `appdirs` for log file paths.
 - Structured logging via `yasf.sf()` (optional - you can still use simple strings).
