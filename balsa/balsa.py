@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 import traceback
 import sys
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict, Any, Optional
 from pathlib import Path
 from copy import deepcopy
 
@@ -109,6 +109,9 @@ class Balsa(object):
     log_extension = attrib(default=".log")
     log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(processName)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
     log_console_prefix = attrib(default="")  # set to "\r" (rewrite existing line) or "\n" (new line) to avoid logs appended to current line
+    # console handler level - None uses the verbose-driven default (INFO when verbose, else WARNING). As a configuration attribute it's carried to child processes by
+    # balsa_clone(). Note that records below the logger's own level (DEBUG when verbose, else INFO) never reach any handler, so a lower console level has no effect.
+    console_log_level = attrib(default=None, type=Optional[int])
 
     handlers = attrib(default=None)
     log = attrib(default=None)
@@ -253,7 +256,9 @@ class Balsa(object):
             console_handler = logging.StreamHandler()
             # prefix for things like "\n" or "\r"
             console_handler.setFormatter(BalsaFormatter(f"{self.log_console_prefix}{self.log_formatter_string}"))
-            if self.verbose:
+            if self.console_log_level is not None:
+                console_handler.setLevel(self.console_log_level)
+            elif self.verbose:
                 console_handler.setLevel(logging.INFO)
             else:
                 console_handler.setLevel(logging.WARNING)
