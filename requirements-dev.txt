@@ -26,6 +26,7 @@ PySide6
 matplotlib
 #
 # packaging
+build
 twine
 wheel
 #
