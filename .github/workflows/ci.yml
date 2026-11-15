@@ -1,4 +1,4 @@
-# Continuous integration: format check, lint, type check, wheel build and the test suite with coverage, on every pull
+# Continuous integration: format check, lint, type check, package build and the test suite with coverage, on every pull
 # request and on pushes to main.
 #
 # Runs on Windows only: the test helpers import win32gui (test_balsa/popup_window.py) and the GUI tests open real Tk
@@ -58,15 +58,15 @@ jobs:
         run: |
           python -m mypy -m balsa
           python -m mypy -m test_balsa
-      - name: Build wheel
+      - name: Build sdist and wheel
         # Same build as .github/workflows/publish.yml (which only runs on a release), so packaging breakage shows up here.
         # The readme copies are regenerated first, exactly as the publish workflow does.
         shell: bash
         run: |
           cp docs/source/readme.rst readme.rst
           cp docs/source/readme.rst balsa/readme.rst
-          python -m build --wheel
-          python -m twine check dist/*
+          python -m build
+          python -m twine check --strict dist/*
       - name: Close stray dialog boxes on the runner desktop
         # Hosted runners sometimes boot with a Windows dialog already open (seen: "System Properties - Windows created
         # a temporary paging file ..."). The GUI tests look for any visible dialog box with an OK button
