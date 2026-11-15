@@ -57,5 +57,35 @@ jobs:
         run: |
           python -m mypy -m balsa
           python -m mypy -m test_balsa
+      - name: Close stray dialog boxes on the runner desktop
+        # Hosted runners sometimes boot with a Windows dialog already open (seen: "System Properties - Windows created
+        # a temporary paging file ..."). The GUI tests look for any visible dialog box with an OK button
+        # (test_balsa/popup_window.py), so a leftover one fails the tests that assert no popup appears.
+        shell: python
+        run: |
+          import time
+
+          import win32con
+          import win32gui
+
+
+          def visible_dialogs() -> list:
+              dialogs: list = []
+
+              def collect(hwnd: int, found: list) -> None:
+                  if win32gui.IsWindowVisible(hwnd) and win32gui.GetClassName(hwnd) == "#32770":
+                      found.append(hwnd)
+
+              win32gui.EnumWindows(collect, dialogs)
+              return dialogs
+
+
+          for hwnd in visible_dialogs():
+              print(f"closing stray dialog box: {win32gui.GetWindowText(hwnd)!r}")
+              win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+          time.sleep(2.0)
+          remaining = [win32gui.GetWindowText(hwnd) for hwnd in visible_dialogs()]
+          if remaining:
+              raise SystemExit(f"dialog boxes still open: {remaining}")
       - name: Test (pytest)
         run: python -m pytest --cov-report=term --cov
