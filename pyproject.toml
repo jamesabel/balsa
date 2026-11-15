@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "balsa"
+description = "logging utility"
+# readme.rst is a generated copy of docs/source/readme.rst (see scripts/sphinx.bat and the publish workflow)
+readme = "readme.rst"
+authors = [{ name = "James Abel", email = "j@abel.co" }]
+license = "MIT"
+keywords = ["logging", "utility"]
+# Supported Python versions follow the CI matrix (.github/workflows/ci.yml): 3.11 is the minimum tested version.
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Operating System :: OS Independent",
+    "Topic :: System :: Logging",
+    "Typing :: Typed",
+]
+dependencies = ["appdirs", "attrs", "mttkinter", "python-dateutil", "yasf", "tobool"]
+# the version lives in balsa/__version__.py; setuptools reads it statically, without importing the package
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/jamesabel/balsa"
+Documentation = "https://balsa.readthedocs.io/"
+
+[tool.setuptools]
+packages = ["balsa"]
+
+[tool.setuptools.dynamic]
+version = { attr = "balsa.__version__.__version__" }
+
+[tool.setuptools.package-data]
+balsa = ["py.typed"]
