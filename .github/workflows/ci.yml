@@ -80,10 +80,15 @@ jobs:
               return dialogs
 
 
-          for hwnd in visible_dialogs():
-              print(f"closing stray dialog box: {win32gui.GetWindowText(hwnd)!r}")
-              win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
-          time.sleep(2.0)
+          # closing one dialog box can reveal another (the paging file message is followed by "Performance Options"), so repeat
+          for attempt in range(10):
+              dialogs = visible_dialogs()
+              if not dialogs:
+                  break
+              for hwnd in dialogs:
+                  print(f"closing stray dialog box: {win32gui.GetWindowText(hwnd)!r}")
+                  win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+              time.sleep(2.0)
           remaining = [win32gui.GetWindowText(hwnd) for hwnd in visible_dialogs()]
           if remaining:
               raise SystemExit(f"dialog boxes still open: {remaining}")
