@@ -8,7 +8,7 @@ balsa (logging utility)
     :target: https://github.com/jamesabel/balsa/actions/workflows/ci.yml
     :alt: CI
 
-.. image:: https://codecov.io/gh/jamesabel/balsa/graph/badge.svg
+.. image:: https://codecov.io/gh/jamesabel/balsa/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/jamesabel/balsa
     :alt: Code coverage
 
