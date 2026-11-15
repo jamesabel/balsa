@@ -1,0 +1,6 @@
+# Codecov configuration (https://docs.codecov.com/docs/codecov-yaml).
+
+coverage:
+  # Badge colour scale: red below 60%, shading through yellow, green from 80% up. 80% matches the --cov-fail-under gate
+  # in .github/workflows/ci.yml. (Codecov's default scale is 70..100, which shows anything short of 100% as not green.)
+  range: "60..80"
