@@ -5,3 +5,5 @@ branch = True
 
 [report]
 show_missing = True
+# the run fails below this total (pytest-cov applies it to any run with --cov, including CI); 86% as of 2026-11
+fail_under = 80

@@ -94,7 +94,8 @@ jobs:
           if remaining:
               raise SystemExit(f"dialog boxes still open: {remaining}")
       - name: Test (pytest)
-        # Coverage is configured in .coveragerc (balsa package only, branch coverage). The terminal report goes to the
+        # Coverage is configured in .coveragerc (balsa package only, branch coverage, fail_under gate that fails this
+        # step when total coverage is too low). The terminal report goes to the
         # log, the markdown report to the job summary and the HTML report to an artifact.
         run: python -m pytest --cov --cov-report=term --cov-report=html --cov-report=markdown:coverage.md
       - name: Coverage summary
