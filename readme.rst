@@ -8,6 +8,22 @@ balsa (logging utility)
     :target: https://github.com/jamesabel/balsa/actions/workflows/ci.yml
     :alt: CI
 
+.. image:: https://img.shields.io/pypi/v/balsa
+    :target: https://pypi.org/project/balsa/
+    :alt: PyPI version
+
+.. image:: https://img.shields.io/pypi/dm/balsa
+    :target: https://pypi.org/project/balsa/
+    :alt: PyPI downloads per month
+
+.. image:: https://readthedocs.org/projects/balsa/badge/?version=latest
+    :target: https://balsa.readthedocs.io/en/latest/
+    :alt: Documentation status
+
+.. image:: https://img.shields.io/pypi/l/balsa
+    :target: https://github.com/jamesabel/balsa/blob/main/LICENSE
+    :alt: License
+
 Simple to use package that sets up Python logging.  With just a few lines of code get well formatted logging to the
 console, log file, popup windows and exception services.
 
