@@ -1,6 +1,7 @@
 [run]
-omit =
-        *venv/*
-        *test_balsa/*
-
+# measure the balsa package only (not the tests, not the venv)
+source = balsa
 branch = True
+
+[report]
+show_missing = True

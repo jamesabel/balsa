@@ -1,4 +1,5 @@
-# Continuous integration: format check, lint, type check and the test suite, on every pull request and on pushes to main.
+# Continuous integration: format check, lint, type check and the test suite with coverage, on every pull request and on
+# pushes to main.
 #
 # Runs on Windows only: the test helpers import win32gui (test_balsa/popup_window.py) and the GUI tests open real Tk
 # dialog boxes and dismiss them with pyautogui, which needs the interactive desktop the hosted Windows runners provide.
@@ -93,4 +94,23 @@ jobs:
           if remaining:
               raise SystemExit(f"dialog boxes still open: {remaining}")
       - name: Test (pytest)
-        run: python -m pytest --cov-report=term --cov
+        # Coverage is configured in .coveragerc (balsa package only, branch coverage). The terminal report goes to the
+        # log, the markdown report to the job summary and the HTML report to an artifact.
+        run: python -m pytest --cov --cov-report=term --cov-report=html --cov-report=markdown:coverage.md
+      - name: Coverage summary
+        if: ${{ !cancelled() && hashFiles('coverage.md') != '' }}
+        shell: bash
+        run: |
+          {
+            echo "## Coverage (Python ${{ matrix.python-version }})"
+            echo
+            cat coverage.md
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload HTML coverage report
+        if: ${{ !cancelled() && hashFiles('htmlcov/index.html') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-html-py${{ matrix.python-version }}
+          path: htmlcov
+          # upload-artifact skips hidden files by default; htmlcov contains a .gitignore, which is not needed
+          if-no-files-found: error
