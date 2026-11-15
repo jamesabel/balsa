@@ -4,6 +4,10 @@
 balsa (logging utility)
 =======================
 
+.. image:: https://github.com/jamesabel/balsa/actions/workflows/ci.yml/badge.svg?branch=main
+    :target: https://github.com/jamesabel/balsa/actions/workflows/ci.yml
+    :alt: CI
+
 Simple to use package that sets up Python logging.  With just a few lines of code get well formatted logging to the
 console, log file, popup windows and exception services.
 
