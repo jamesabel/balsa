@@ -1,0 +1,13 @@
+# Keeps the GitHub Actions used by the workflows up to date. The workflows pin actions to commit SHAs, so without this
+# the pins would never move; Dependabot updates the SHA and the version comment together.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # one pull request per week for all action updates, rather than one per action
+      actions:
+        patterns: ["*"]
