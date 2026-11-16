@@ -16,6 +16,10 @@ balsa (logging utility)
     :target: https://pypi.org/project/balsa/
     :alt: PyPI version
 
+.. image:: https://img.shields.io/pypi/pyversions/balsa
+    :target: https://pypi.org/project/balsa/
+    :alt: Supported Python versions
+
 .. image:: https://img.shields.io/pypi/dm/balsa
     :target: https://pypi.org/project/balsa/
     :alt: PyPI downloads per month
