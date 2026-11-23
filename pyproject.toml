@@ -39,3 +39,77 @@ version = { attr = "balsa.__version__.__version__" }
 
 [tool.setuptools.package-data]
 balsa = ["py.typed"]
+
+# Development environment, managed by uv: "uv sync" creates .venv with the project (editable) and this group.
+# uv.lock pins the resolved versions; "uv lock --upgrade" refreshes them.
+[dependency-groups]
+dev = [
+    # cloud services (optional at runtime, soft imports in balsa)
+    # <3: sentry-sdk 3.0.0 (released 2026-11-23) changed LoggingIntegration's parameters (sentry_logs_level is gone),
+    # which balsa's Sentry structured logs support passes. Remove the cap once balsa supports sentry-sdk 3.
+    "sentry-sdk[flask]<3",
+    "awsimple",
+    # docs
+    "sphinx",
+    # dev only
+    "semantic_version",
+    "pytest-pycharm",
+    "moto",
+    "ismain",
+    "types-python-dateutil",
+    "python-dotenv",
+    "pygments",
+    # libraries that can potentially interfere with GUI logging
+    "PyQt5",
+    "PyQt5-stubs",
+    "PySide6",
+    "matplotlib",
+    # packaging
+    "twine",
+    # linter/formatter and type checker
+    "ruff",
+    "ty",
+    # testing
+    "pytest",
+    "coverage",
+    "pytest-cov",
+    "pytest-randomly",
+    "pytest-order",
+    "pywin32; sys_platform == 'win32'",
+    "types-pywin32",
+    "types-pyautogui",
+    # pyautogui
+    "pyobjc-core; sys_platform == 'darwin'",
+    "pyobjc; sys_platform == 'darwin'",
+    "pyautogui; sys_platform == 'darwin' or sys_platform == 'win32'",
+]
+
+[tool.ruff]
+line-length = 192
+# ruff covers the package and its tests, as black and flake8 did
+extend-exclude = ["docs", "examples", "temp"]
+
+[tool.ruff.format]
+# tst_balsa.py is human-owned test code that AI tools must not edit, and ruff's formatting of it differs from black's
+# (blank lines after the class statements). Run "ruff format test_balsa/tst_balsa.py" by hand and drop this exclusion.
+exclude = ["test_balsa/tst_balsa.py"]
+
+[tool.ruff.lint]
+# pycodestyle and pyflakes: the rule set flake8 checked before the move to ruff
+select = ["E", "F", "W"]
+ignore = [
+    "E402", # module level import not at top of file
+    "F401", # imported but unused
+    "E501", # line too long
+]
+
+[tool.uv]
+constraint-dependencies = [
+    # PyQt5-Qt5 5.15.2 is the last release with a Windows wheel (later releases are macOS/Linux only, with no sdist)
+    "pyqt5-qt5==5.15.2; sys_platform == 'win32'",
+]
+# Wheels only, so a package with no wheel for a Python version fails the install instead of silently compiling from
+# source. The exceptions build from source: balsa itself, and pure-Python packages that are only published as sdists
+# (mttkinter, sqlitedict, and pyautogui with its helper packages), which build cleanly with no compiler.
+no-build = true
+no-binary-package = ["balsa", "mttkinter", "sqlitedict", "pyautogui", "pytweening", "pyscreeze", "pygetwindow", "mouseinfo", "pyrect"]

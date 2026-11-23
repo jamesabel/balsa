@@ -91,66 +91,65 @@ def _normalize_rate_limits(rate_limits: dict) -> dict:
 
 @attrs
 class Balsa(object):
-
     # commonly used options
-    name = attrib(default=None, type=str)  # log name
-    author = attrib(default=None, type=str)
-    verbose = attrib(default=False, type=bool)
-    gui = attrib(default=False, type=bool)
-    delete_existing_log_files = attrib(default=False, type=bool)
+    name: str = attrib(default=None)  # log name
+    author: str = attrib(default=None)
+    verbose: bool = attrib(default=False)
+    gui: bool = attrib(default=False)
+    delete_existing_log_files: bool = attrib(default=False)
 
-    max_bytes = attrib(default=100 * 1000 * 1000, type=int)
-    backup_count = attrib(default=3, type=int)
-    error_callback = attrib(default=None)
-    max_string_list_entries = attrib(default=100, type=int)
+    max_bytes: int = attrib(default=100 * 1000 * 1000)
+    backup_count: int = attrib(default=3)
+    error_callback: Any = attrib(default=None)
+    max_string_list_entries: int = attrib(default=100)
 
-    log_directory = attrib(default=None)  # type: Union[Path, str]
-    log_path = attrib(default=None, type=Path)
-    log_extension = attrib(default=".log")
-    log_formatter_string = attrib(default="%(asctime)s - %(name)s - %(processName)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
-    log_console_prefix = attrib(default="")  # set to "\r" (rewrite existing line) or "\n" (new line) to avoid logs appended to current line
+    log_directory: Union[Path, str] = attrib(default=None)
+    log_path: Path = attrib(default=None)
+    log_extension: Any = attrib(default=".log")
+    log_formatter_string: Any = attrib(default="%(asctime)s - %(name)s - %(processName)s - %(filename)s - %(lineno)s - %(funcName)s - %(levelname)s - %(message)s")
+    log_console_prefix: Any = attrib(default="")  # set to "\r" (rewrite existing line) or "\n" (new line) to avoid logs appended to current line
     # console handler level - None uses the verbose-driven default (INFO when verbose, else WARNING). As a configuration attribute it's carried to child processes by
     # balsa_clone(). Note that records below the logger's own level (DEBUG when verbose, else INFO) never reach any handler, so a lower console level has no effect.
-    console_log_level = attrib(default=None, type=Optional[int])
+    console_log_level: Optional[int] = attrib(default=None)
 
-    handlers = attrib(default=None)
-    log = attrib(default=None)
-    is_root = attrib(default=True)
-    propagate = attrib(default=True)  # set to False for this logger to be independent of parent(s)
+    handlers: Any = attrib(default=None)
+    log: Any = attrib(default=None)
+    is_root: Any = attrib(default=True)
+    propagate: Any = attrib(default=True)  # set to False for this logger to be independent of parent(s)
 
     # cloud services
     # set inhibit_cloud_services to True to turn off all cloud services - Sentry and AWS CloudWatch logs (good for testing)
-    inhibit_cloud_services = attrib(default=False, type=bool)
+    inhibit_cloud_services: bool = attrib(default=False)
 
     # sentry
-    use_sentry = attrib(default=False, type=bool)
-    use_sentry_flask = attrib(default=False, type=bool)
-    use_sentry_django = attrib(default=False, type=bool)
-    use_sentry_lambda = attrib(default=False, type=bool)
-    use_sentry_sqlalchemy = attrib(default=False, type=bool)
-    use_sentry_celery = attrib(default=False, type=bool)
+    use_sentry: bool = attrib(default=False)
+    use_sentry_flask: bool = attrib(default=False)
+    use_sentry_django: bool = attrib(default=False)
+    use_sentry_lambda: bool = attrib(default=False)
+    use_sentry_sqlalchemy: bool = attrib(default=False)
+    use_sentry_celery: bool = attrib(default=False)
 
-    sentry_dsn = attrib(default=None, type=str)
+    sentry_dsn: str = attrib(default=None)
     # Sentry's default max value length tends to truncate logged stack traces. Set to None to use the default from Sentry.
-    sentry_max_string_len = attrib(default=8 * 1024)  # type: Union[int, None]
-    sentry_breadcrumb_level = attrib(default=logging.INFO, type=int)  # the Sentry default level (AKA breadcrumb level) is also INFO
-    sentry_event_level = attrib(default=logging.ERROR, type=int)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
+    sentry_max_string_len: Union[int, None] = attrib(default=8 * 1024)
+    sentry_breadcrumb_level: int = attrib(default=logging.INFO)  # the Sentry default level (AKA breadcrumb level) is also INFO
+    sentry_event_level: int = attrib(default=logging.ERROR)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
 
     # Sentry structured logs (https://docs.sentry.io/platforms/python/logs/) - send log records to Sentry as searchable, first-class log entries (requires sentry-sdk >= 2.35.0)
-    use_sentry_logs = attrib(default=False, type=bool)  # can be used with or without use_sentry
-    sentry_logs_level = attrib(default=logging.INFO, type=int)  # minimum level for log records sent to Sentry structured logs (the Sentry SDK default is also INFO)
+    use_sentry_logs: bool = attrib(default=False)  # can be used with or without use_sentry
+    sentry_logs_level: int = attrib(default=logging.INFO)  # minimum level for log records sent to Sentry structured logs (the Sentry SDK default is also INFO)
 
     # AWS CloudWatch logs
-    use_aws_cloudwatch_logs = attrib(default=False, type=bool)
-    aws_credentials = attrib(factory=dict, type=dict)  # kwargs that will get sent to boto3 (via AWSimple)
+    use_aws_cloudwatch_logs: bool = attrib(default=False)
+    aws_credentials: dict = attrib(factory=dict)  # kwargs that will get sent to boto3 (via AWSimple)
 
-    instance_name = attrib(default=None, type=str)
+    instance_name: str = attrib(default=None)
 
     # turn off file logging, e.g. for cloud environments where it's not recommended and/or possible to write to the local file system
-    use_file_logging = attrib(default=True, type=bool)
+    use_file_logging: bool = attrib(default=True)
 
     # a separate rate limit for each level
-    rate_limits = attrib(
+    rate_limits: Any = attrib(
         factory=lambda: {
             level: {"count": 2, "time": 60.0}
             for level in [
@@ -214,7 +213,6 @@ class Balsa(object):
                 self.log_directory = Path(appdirs.user_log_dir(self.name, self.author))
 
             if self.log_directory is not None:
-
                 if isinstance(self.log_directory, str):
                     self.log_directory = Path(self.log_directory)
 
@@ -315,7 +313,7 @@ class Balsa(object):
                 if sentry_dsn is None:
                     raise ValueError("Missing Sentry DSN - either set as an environmental variable or a parameter to the Balsa constructor")
 
-                sentry_kwargs = {}
+                sentry_kwargs: Dict[str, Any] = {}
                 if self.sentry_max_string_len is not None:
                     sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
                 if self.use_sentry_logs:

@@ -1,5 +1,6 @@
-# Keeps the GitHub Actions used by the workflows up to date. The workflows pin actions to commit SHAs, so without this
-# the pins would never move; Dependabot updates the SHA and the version comment together.
+# Keeps the GitHub Actions used by the workflows, and the development dependencies pinned in uv.lock, up to date.
+# The workflows pin actions to commit SHAs, so without this the pins would never move; Dependabot updates the SHA and
+# the version comment together.
 
 version: 2
 updates:
@@ -10,4 +11,12 @@ updates:
     groups:
       # one pull request per week for all action updates, rather than one per action
       actions:
+        patterns: ["*"]
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # one pull request per week for all uv.lock updates, rather than one per package
+      python:
         patterns: ["*"]

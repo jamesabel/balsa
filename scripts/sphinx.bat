@@ -1,11 +1,5 @@
 pushd .
 cd ..
-set PYTHONPATH=%CD%
-call venv\Scripts\activate
-pushd .
-cd docs
-call make.bat html
-popd
-call venv\Scripts\deactivate
+uv run sphinx-build -M html docs\source docs\build
 copy /Y docs\source\readme.rst readme.rst
 popd
