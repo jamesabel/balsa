@@ -89,11 +89,6 @@ line-length = 192
 # ruff covers the package and its tests, as black and flake8 did
 extend-exclude = ["docs", "examples", "temp"]
 
-[tool.ruff.format]
-# tst_balsa.py is human-owned test code that AI tools must not edit, and ruff's formatting of it differs from black's
-# (blank lines after the class statements). Run "ruff format test_balsa/tst_balsa.py" by hand and drop this exclusion.
-exclude = ["test_balsa/tst_balsa.py"]
-
 [tool.ruff.lint]
 # pycodestyle and pyflakes: the rule set flake8 checked before the move to ruff
 select = ["E", "F", "W"]

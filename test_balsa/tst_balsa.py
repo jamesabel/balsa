@@ -30,7 +30,6 @@ default_rate_limits = {
 
 
 class TstBalsa(Balsa):
-
     def __init__(self, name: str, gui: bool, is_root: bool, rate_limits: dict | None):
         if rate_limits is None:
             rate_limits = default_rate_limits
@@ -38,13 +37,11 @@ class TstBalsa(Balsa):
 
 
 class TstCLIBalsa(TstBalsa):
-
     def __init__(self, name: str, is_root: bool = False, rate_limits: dict | None = None):
         super().__init__(name, gui=False, is_root=is_root, rate_limits=rate_limits)
 
 
 class TstGUIBalsa(TstBalsa):
-
     def __init__(self, name: str, is_root: bool = False, rate_limits: dict | None = None):
         super().__init__(name, gui=True, is_root=is_root, rate_limits=rate_limits)
 
