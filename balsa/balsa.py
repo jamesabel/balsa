@@ -89,6 +89,13 @@ def _normalize_rate_limits(rate_limits: dict) -> dict:
     return {int(level): limits for level, limits in rate_limits.items()}
 
 
+def _sentry_sdk_major_version() -> int:
+    """
+    The major version of the installed Sentry SDK, e.g. 3 for sentry-sdk 3.0.0. Balsa supports sentry-sdk 2.x and 3.x, which configure log handling differently.
+    """
+    return int(sentry_sdk.VERSION.split(".")[0])
+
+
 @attrs
 class Balsa(object):
     # commonly used options
@@ -135,7 +142,7 @@ class Balsa(object):
     sentry_breadcrumb_level: int = attrib(default=logging.INFO)  # the Sentry default level (AKA breadcrumb level) is also INFO
     sentry_event_level: int = attrib(default=logging.ERROR)  # e.g. set to logging.WARNING if you want Sentry to also notify on warnings (the Sentry default event level is also ERROR)
 
-    # Sentry structured logs (https://docs.sentry.io/platforms/python/logs/) - send log records to Sentry as searchable, first-class log entries (requires sentry-sdk >= 2.35.0)
+    # Sentry structured logs (https://docs.sentry.io/platforms/python/logs/) - send log records to Sentry as searchable, first-class log entries (requires sentry-sdk >= 2.35.0, including 3.x)
     use_sentry_logs: bool = attrib(default=False)  # can be used with or without use_sentry
     sentry_logs_level: int = attrib(default=logging.INFO)  # minimum level for log records sent to Sentry structured logs (the Sentry SDK default is also INFO)
 
@@ -280,10 +287,22 @@ class Balsa(object):
                 # warning (not info) since forgetting to unset the development mode environment variable in production would silently turn off error reporting
                 self.log.warning(f"Sentry not initialized since the {balsa_dev_env_var} environment variable is set")
             else:
-                sentry_logging_kwargs = {"level": self.sentry_breadcrumb_level, "event_level": self.sentry_event_level}
-                if self.use_sentry_logs:
-                    # only pass sentry_logs_level when in use since the parameter requires sentry-sdk >= 2.35.0
-                    sentry_logging_kwargs["sentry_logs_level"] = self.sentry_logs_level
+                sentry_sdk_3 = _sentry_sdk_major_version() >= 3
+                sentry_logging_kwargs: Dict[str, Any]
+                if sentry_sdk_3:
+                    # sentry-sdk 3.x: "level" is the structured logs level and None turns structured logs off (there is no enable_logs option), breadcrumbs have
+                    # their own parameter, and event_level has to be given since it no longer defaults to ERROR
+                    sentry_logging_kwargs = {
+                        "level": self.sentry_logs_level if self.use_sentry_logs else None,
+                        "event_level": self.sentry_event_level,
+                        "breadcrumb_level": self.sentry_breadcrumb_level,
+                    }
+                else:
+                    # sentry-sdk 2.x: "level" is the breadcrumb level
+                    sentry_logging_kwargs = {"level": self.sentry_breadcrumb_level, "event_level": self.sentry_event_level}
+                    if self.use_sentry_logs:
+                        # only pass sentry_logs_level when in use since the parameter requires sentry-sdk >= 2.35.0
+                        sentry_logging_kwargs["sentry_logs_level"] = self.sentry_logs_level
                 sentry_logging = SentryLoggingIntegration(**sentry_logging_kwargs)
 
                 integrations = [sentry_logging]
@@ -315,9 +334,9 @@ class Balsa(object):
 
                 sentry_kwargs: Dict[str, Any] = {}
                 if self.sentry_max_string_len is not None:
-                    sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # sentry-sdk 2.x - longer values so logged stack traces don't get truncated
-                if self.use_sentry_logs:
-                    # only pass enable_logs when in use since the option requires sentry-sdk >= 2.35.0
+                    sentry_kwargs["max_value_length"] = self.sentry_max_string_len  # longer values so logged stack traces don't get truncated
+                if self.use_sentry_logs and not sentry_sdk_3:
+                    # sentry-sdk 2.x only (3.x has no such option - see the logging integration above). Only passed when in use since it requires sentry-sdk >= 2.35.0.
                     sentry_kwargs["enable_logs"] = True
 
                 sentry_sdk.init(
