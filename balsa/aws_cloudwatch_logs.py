@@ -23,6 +23,7 @@ try:
     # user may or may not use AWS CloudWatch logs
 
     from awsimple import LogsAccess
+    from botocore.exceptions import BotoCoreError, ClientError  # botocore is installed with awsimple
 
     awsimple_exists = True
 
@@ -70,8 +71,12 @@ if awsimple_exists:
                 if self.logs_access is None:
                     self.logs_access = LogsAccess(self.log_group, **self.aws_kwargs)
                 self.logs_access.put(put_string)
-            except Exception:
-                # a cloud logging failure (e.g. a network error) must not raise out of the user's log call
+            except (BotoCoreError, ClientError, OSError, TypeError, ValueError, KeyError):
+                # A cloud logging failure must not raise out of the user's log call. The failures this can plausibly have:
+                #   BotoCoreError - no credentials, unknown profile, endpoint connection and other HTTP client errors
+                #   ClientError - AWS rejected the request (e.g. access denied, throttling)
+                #   OSError - network and socket errors not wrapped by botocore, and getpass.getuser() when there is no user name (KeyError before Python 3.13)
+                #   TypeError, ValueError - the log call's arguments don't match its format string, or the message or its structured (JSON) part can't be parsed or serialized
                 self.handleError(record)
 
 else:
