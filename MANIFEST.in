@@ -1,5 +1,5 @@
 # Extra files for the sdist, on top of what setuptools includes by default (the balsa package, pyproject.toml, the
 # readme and the license files): the test suite and what is needed to run it.
 graft test_balsa
-include pytest.ini .coveragerc requirements-dev.txt
+include pytest.ini .coveragerc uv.lock
 global-exclude __pycache__ *.py[cod]

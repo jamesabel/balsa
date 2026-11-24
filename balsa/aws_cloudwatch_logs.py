@@ -27,7 +27,6 @@ try:
     awsimple_exists = True
 
 except ImportError:
-
     awsimple_exists = False
 
 if awsimple_exists:
@@ -77,9 +76,7 @@ if awsimple_exists:
 
 else:
 
-    # mypy will complain that AWSCloudWatchLogHandler is already defined ...
-
-    class AWSCloudWatchLogHandler(logging.NullHandler):  # type: ignore
+    class AWSCloudWatchLogHandler(logging.NullHandler):
         # dummy so we don't get an import error
         def __init__(self, log_group: str, **kwargs):
             log.error("AWS CloudWatch enabled but awsimple not installed")
