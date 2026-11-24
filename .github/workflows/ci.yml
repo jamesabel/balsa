@@ -105,6 +105,10 @@ jobs:
         # local partial runs with --cov are not failed by it. The terminal report goes to the
         # log, the markdown report to the job summary, the HTML report to an artifact and the XML report to Codecov.
         run: uv run pytest --cov --cov-fail-under=80 --cov-report=term --cov-report=html --cov-report=markdown:coverage.md --cov-report=xml
+      - name: Test Sentry support with sentry-sdk 3 (pytest)
+        # uv.lock pins sentry-sdk 2.x (see the dev dependency group in pyproject.toml), so the step above tests balsa
+        # with 2.x. This runs the tests that are written for both major versions with the latest 3.x layered on top.
+        run: uv run --with "sentry-sdk[flask]>=3" pytest test_balsa/test_sentry_sdk_versions.py
       - name: Upload coverage to Codecov
         # Feeds the coverage badge in the readme and Codecov's pull request comments. Skipped for Dependabot pull
         # requests, which run without access to repository secrets and so have no upload token.

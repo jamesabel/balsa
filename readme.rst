@@ -54,7 +54,7 @@ Major Features
 - `Sentry <https://sentry.io/>`_ support. Just provide your `Sentry DSN <https://docs.sentry.io/concepts/key-terms/dsn-explainer/>`_.
   Set the `BALSA_DEV` environment variable to keep development-time errors out of Sentry.
 - `Sentry structured logs <https://docs.sentry.io/platforms/python/logs/>`_ support. Set `use_sentry_logs` to send log records to
-  Sentry as searchable, first-class log entries (requires sentry-sdk 2.35+).
+  Sentry as searchable, first-class log entries (requires sentry-sdk 2.35+; sentry-sdk 3 is supported).
 - Informative log message formatting (or you can change it if you like).
 - ISO 8601 timestamp format (with fractional seconds).
 - Cross platform (Windows, Linux, macOS).  Pure Python.

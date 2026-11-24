@@ -45,8 +45,9 @@ balsa = ["py.typed"]
 [dependency-groups]
 dev = [
     # cloud services (optional at runtime, soft imports in balsa)
-    # <3: sentry-sdk 3.0.0 (released 2026-11-23) changed LoggingIntegration's parameters (sentry_logs_level is gone),
-    # which balsa's Sentry structured logs support passes. Remove the cap once balsa supports sentry-sdk 3.
+    # balsa supports sentry-sdk 2.x and 3.x. The development environment stays on 2.x because two human-owned tests in
+    # test_balsa/test_sentry.py assert the 2.x-only enable_logs option; CI also runs
+    # test_balsa/test_sentry_sdk_versions.py against 3.x. Remove the cap once those two tests allow for 3.x.
     "sentry-sdk[flask]<3",
     "awsimple",
     # docs
