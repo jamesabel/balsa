@@ -1,8 +1,10 @@
 
-import semantic_version
+import runpy
+from pathlib import Path
 
-# from balsa import __version__
-__version__ = '0.0.3'
+# The version comes from balsa/__version__.py, the single place it is kept. That file is run on its own rather than
+# imported through the balsa package, so building the docs (e.g. on Read the Docs) needs nothing installed but Sphinx.
+__version__ = runpy.run_path(str(Path(__file__).parent.parent.parent / "balsa" / "__version__.py"))["__version__"]
 
 # -*- coding: utf-8 -*-
 #
@@ -29,9 +31,8 @@ project = 'balsa'
 copyright = '2018, James Abel'
 author = 'James Abel'
 
-v = semantic_version.Version(__version__)
 # The short X.Y version
-version = '%s.%s' % (v.major, v.minor)
+version = ".".join(__version__.split(".")[:2])
 # The full version, including alpha/beta/rc tags
 release = __version__
 
@@ -68,7 +69,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -95,7 +96,7 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []  # there are no custom static files
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

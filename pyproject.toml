@@ -52,7 +52,6 @@ dev = [
     # docs
     "sphinx",
     # dev only
-    "semantic_version",
     "pytest-pycharm",
     "moto",
     "ismain",
