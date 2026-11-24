@@ -45,10 +45,9 @@ balsa = ["py.typed"]
 [dependency-groups]
 dev = [
     # cloud services (optional at runtime, soft imports in balsa)
-    # balsa supports sentry-sdk 2.x and 3.x. The development environment stays on 2.x because two human-owned tests in
-    # test_balsa/test_sentry.py assert the 2.x-only enable_logs option; CI also runs
-    # test_balsa/test_sentry_sdk_versions.py against 3.x. Remove the cap once those two tests allow for 3.x.
-    "sentry-sdk[flask]<3",
+    # balsa supports sentry-sdk 2.x and 3.x. The development environment has the latest; CI also runs the Sentry tests
+    # against 2.x.
+    "sentry-sdk[flask]",
     "awsimple",
     # docs
     "sphinx",

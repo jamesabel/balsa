@@ -71,9 +71,14 @@ def test_sentry_logs_enabled(monkeypatch):
     balsa.init_logger()
 
     assert len(init_calls) == 1
-    assert init_calls[0]["enable_logs"] is True
     sentry_logging_integration = init_calls[0]["integrations"][0]
-    assert sentry_logging_integration._sentry_logs_handler.level == logging.INFO
+    if int(sentry_sdk.VERSION.split(".")[0]) >= 3:
+        # sentry-sdk 3.x has no enable_logs option - structured logs are on when the logging integration has a logs level
+        assert "enable_logs" not in init_calls[0]
+        assert sentry_logging_integration._logs_handler.level == logging.INFO
+    else:
+        assert init_calls[0]["enable_logs"] is True
+        assert sentry_logging_integration._sentry_logs_handler.level == logging.INFO
 
     balsa.remove()
 
@@ -90,7 +95,12 @@ def test_sentry_logs_without_use_sentry(monkeypatch):
     balsa.init_logger()
 
     assert len(init_calls) == 1
-    assert init_calls[0]["enable_logs"] is True
+    if int(sentry_sdk.VERSION.split(".")[0]) >= 3:
+        # sentry-sdk 3.x has no enable_logs option - structured logs are on when the logging integration has a logs level
+        assert "enable_logs" not in init_calls[0]
+        assert init_calls[0]["integrations"][0]._logs_handler is not None
+    else:
+        assert init_calls[0]["enable_logs"] is True
 
     balsa.remove()
 
